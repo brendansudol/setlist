@@ -704,7 +704,7 @@ PLAYER_JS = r"""
 
   function openDock(origin) {
     // A tap inside the dock itself (a section shortcut) has no card to bring into view.
-    var anchor = origin && !dock.contains(origin) ? (origin.closest('.chord, .part') || origin) : null;
+    var anchor = origin && !dock.contains(origin) ? (origin.closest('.chord, .part, .addon') || origin) : null;
     if (dock.hidden) {
       hold(anchor || probe(), function () {  // the page is rearranged: keep it where it was
         dock.hidden = false;

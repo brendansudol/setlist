@@ -85,7 +85,7 @@ header.top { display: grid; gap: 12px; }
 
 /* chord cards */
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(288px, 1fr)); gap: 14px; }
-.chord { background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--fam); border-radius: 8px; padding: 14px; display: grid; gap: 12px; align-content: start; scroll-margin-top: 12px; }
+.chord { background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--fam); border-radius: 8px; padding: 14px; display: grid; gap: 12px; align-content: start; scroll-margin-top: calc(var(--player-h, 0px) + 12px); /* a chord tapped in the map lands below the open video */ }
 .chord header { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 2px; align-items: baseline; }
 .chord h3 { font-size: 2rem; font-weight: 800; }
 .meta { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: .8125rem; color: var(--muted); }
@@ -163,15 +163,93 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
 .steps { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; max-width: 62ch; }
 .source { font-size: .875rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 8px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+/* The lesson video. Hidden until a timestamp is tapped; after that it stays on screen
+   while the page scrolls, so the video and a diagram are visible together. Where it
+   sits depends on the width of the window:
+     under 700px   a band across the top: the video, then a row of controls
+     from 700px    the same band, with the controls beside the video
+     from 1100px   a box in the right margin; the reading column slides left to make
+                   room, and the page keeps the whole height of the window
+   The script moves the page itself when the video opens and closes, so the browser's
+   own scroll anchoring is turned off to stop the two corrections adding up. */
+html, body { overflow-anchor: none; }
+.player { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 4px 16px rgb(0 0 0 / .14); }
+.player[hidden] { display: none; }
+.player-in { max-width: 760px; margin: 0 auto; }
+.player-frame { position: relative; width: min(100%, calc(42vh * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; background: #000; }
+.player-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.player-msg { position: absolute; inset: 0; z-index: 1; display: grid; place-content: center; justify-items: center; gap: 8px; padding: 16px; text-align: center; background: #000; color: #fff; font-size: .9375rem; }
+.player-msg[hidden] { display: none; }
+.player-msg a { color: #fff; font-weight: 700; }
+.player-bar { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 14px; }
+.player-title { flex: 1 1 0; min-width: 0; font-weight: 700; font-size: .9375rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pbtn { flex: none; min-width: 44px; min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 99px; background: transparent; color: var(--ink); font: 700 .8125rem/1 var(--font-body); font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.pbtn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.pbtn:disabled { opacity: .45; cursor: default; }
+.pbtn:focus-visible { outline: 3px solid var(--barre); outline-offset: 2px; }
+.pbtn-x { width: 40px; min-width: 40px; padding: 0; }
+.pbtn-x svg { display: block; width: 12px; height: 12px; margin: 0 auto; }
+.player-jumps { display: none; }  /* section shortcuts: only where there is room for them */
+
+@media (min-width: 700px) {
+  /* The controls sit beside the video, so the band is only as tall as the video. */
+  .player-in { display: grid; grid-template-columns: auto minmax(0, 1fr); padding: 0 16px; }
+  .player-frame { width: min(54vw, calc(42vh * 16 / 9)); margin: 0; }
+  .player-bar { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; grid-template-rows: auto 1fr auto; gap: 10px 8px; padding: 12px 0 12px 20px; }
+  .player-title { grid-column: 1 / 4; grid-row: 1; font: 700 1.25rem/1.15 var(--font-display); white-space: normal; }
+  .pbtn-x { grid-column: 4; grid-row: 1; align-self: start; }
+  .player-jumps { grid-column: 1 / -1; grid-row: 2; align-self: start; display: flex; flex-wrap: wrap; gap: 6px; }
+  .player-jumps a { display: inline-flex; align-items: center; min-height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: .8125rem; font-weight: 700; text-decoration: none; }
+  .player-jumps a:hover { color: var(--ink); border-color: var(--ink); }
+  #player-speed { grid-column: 1; grid-row: 3; }
+  #player-loop { grid-column: 2; grid-row: 3; }
+}
+@media (min-width: 700px) and (min-height: 600px) { .player-frame { width: min(54vw, calc(34vh * 16 / 9)); } }  /* on a tall window, leave more room for the cards */
+
+@media (min-width: 1100px) {
+  /* The video leaves the reading column for a box on the right. --rail is its width:
+     whatever the window has left over once the column has its full 760px, between
+     340px and 600px, and never so tall that the controls under it leave the screen.
+     --col is the column's width and --edge the margin left on each side of the pair. */
+  :root {
+    --rail: min(clamp(340px, calc(100vw - 784px), 600px), calc((100vh - 220px) * 16 / 9));
+    --col: min(760px, calc(100vw - var(--rail) - 24px));
+    --edge: calc((100vw - var(--col) - var(--rail) - 8px) / 2);
+  }
+  :root.dock-open main { max-width: var(--col); margin-left: var(--edge); margin-right: 0; }
+  .player { position: fixed; top: 16px; right: var(--edge); width: var(--rail); max-height: calc(100vh - 32px); overflow: hidden auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 28px rgb(0 0 0 / .2); }
+  .player-in { display: block; max-width: none; padding: 0; }
+  .player-frame { width: 100%; }
+  .player-bar { padding: 14px 12px 14px 16px; }
+}
+@media print { .player { display: none; } }
 </style>
 </head>
 <body>
+
+<aside class="player" id="player" aria-label="Lesson video" hidden>
+  <div class="player-in">
+    <div class="player-frame">
+      <div id="player-video"></div>
+      <div class="player-msg" id="player-msg" hidden><span id="player-msg-text"></span><a id="player-msg-link" href="https://youtu.be/o3AstcWl7E8">Open this part on YouTube</a></div>
+    </div>
+    <div class="player-bar">
+      <p class="player-title" id="player-title" aria-live="polite"></p>
+      <nav class="player-jumps" aria-label="Jump to a section"><a href="https://youtu.be/o3AstcWl7E8?t=61" data-t="61" data-part="Intro">Intro</a><a href="https://youtu.be/o3AstcWl7E8?t=266" data-t="266" data-part="Verse, line 1">Verse, line 1</a><a href="https://youtu.be/o3AstcWl7E8?t=625" data-t="625" data-part="Verse, line 2">Verse, line 2</a><a href="https://youtu.be/o3AstcWl7E8?t=956" data-t="956" data-part="Second half of the verse">Second half of the verse</a></nav>
+      <button type="button" class="pbtn" id="player-speed">1×</button>
+      <button type="button" class="pbtn" id="player-loop" aria-pressed="false" disabled>Loop from here</button>
+      <button type="button" class="pbtn pbtn-x" id="player-close" aria-label="Close the video"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </div>
+  </div>
+</aside>
+
 <main>
 
 <header class="top">
   <p class="eyebrow">Fingerstyle lesson notes</p>
   <h1>Your Song: fourteen chord shapes</h1>
-  <p class="lede">Every fretting-hand shape in the intro and verse of a fingerstyle arrangement, worked out from Six String Fingerpicking's 23-minute lesson on the Elton John song. Each shape links to the moment it appears in the video.</p>
+  <p class="lede">Every fretting-hand shape in the intro and verse of a fingerstyle arrangement, worked out from Six String Fingerpicking's 23-minute lesson on the Elton John song. Tap any time on this page to play that moment of the lesson. The video stays on screen while you read.</p>
   <dl class="facts">
     <div><dt>Tuning</dt><dd>Standard</dd></div>
     <div><dt>Capo</dt><dd>Fret 2 in the lesson. The instructor calls it optional and says fret 1 matches the original.</dd></div>
@@ -184,21 +262,21 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   <h2 id="h-map">The chord map</h2>
   <p>Chords in the order they are played. Tap one to jump to its shape.</p>
   <div class="part">
-    <div class="part-head"><h3>Intro</h3><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=61"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>From <b>1:01</b></span></a></div>
+    <div class="part-head"><h3>Intro</h3><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=61" data-t="61" data-part="Intro"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>From <b>1:01</b></span></a></div>
     <ol class="loop"><li class="fam-open"><a href="#chord-d"><span class="bar">1</span><span class="nm">D</span></a></li><li class="fam-small"><a href="#chord-g-over-d"><span class="bar">2</span><span class="nm">G/D</span></a></li><li class="fam-small"><a href="#chord-a-over-d"><span class="bar">3</span><span class="nm">A/D</span></a></li><li class="fam-small"><a href="#chord-g-over-d"><span class="bar">4</span><span class="nm">G/D</span></a></li></ol>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Verse, line 1</h3><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=266"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>From <b>4:26</b></span></a></div>
+    <div class="part-head"><h3>Verse, line 1</h3><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=266" data-t="266" data-part="Verse, line 1"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>From <b>4:26</b></span></a></div>
     <ol class="loop"><li class="fam-open"><a href="#chord-d"><span class="bar">1</span><span class="nm">D</span></a></li><li class="fam-small"><a href="#chord-gmaj7"><span class="bar">2</span><span class="nm">Gmaj7</span></a></li><li class="fam-open"><a href="#chord-a-over-csharp"><span class="bar">3</span><span class="nm">A/C#</span></a></li><li class="fam-barre"><a href="#chord-fsharp-m7"><span class="bar">4</span><span class="nm">F#m7</span></a></li><li class="fam-bm"><a href="#chord-bm"><span class="bar">5</span><span class="nm">Bm</span></a></li><li class="fam-bm"><a href="#chord-bm-over-a"><span class="bar">6</span><span class="nm">Bm/A</span></a></li><li class="fam-bm"><a href="#chord-bm-over-gsharp"><span class="bar">7</span><span class="nm">Bm/G#</span></a></li><li class="fam-small"><a href="#chord-g6"><span class="bar">8</span><span class="nm">G6</span></a></li></ol>
     <p class="note">The changes come two to a bar: the lesson counts D and Gmaj7 as the first bar, A/C# and F#m7 as the second.</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Verse, line 2</h3><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=625"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>From <b>10:25</b></span></a></div>
+    <div class="part-head"><h3>Verse, line 2</h3><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=625" data-t="625" data-part="Verse, line 2"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>From <b>10:25</b></span></a></div>
     <ol class="loop"><li class="fam-open"><a href="#chord-d"><span class="bar">1</span><span class="nm">D</span></a></li><li class="fam-open"><a href="#chord-a"><span class="bar">2</span><span class="nm">A</span></a></li><li class="fam-barre"><a href="#chord-fsharp-7"><span class="bar">3</span><span class="nm">F#7</span></a></li><li class="fam-bm"><a href="#chord-bm"><span class="bar">4</span><span class="nm">Bm</span></a></li><li class="fam-open"><a href="#chord-d"><span class="bar">5</span><span class="nm">D</span></a></li><li class="fam-bm"><a href="#chord-em"><span class="bar">6</span><span class="nm">Em</span></a></li><li class="fam-open"><a href="#chord-g"><span class="bar">7</span><span class="nm">G</span></a></li><li class="fam-open"><a href="#chord-a"><span class="bar">8</span><span class="nm">A</span></a></li></ol>
     <p class="note">At 10:25 the instructor plays line 1 again from the top and carries straight on into line 2.</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Second half of the verse</h3><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=956"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>From <b>15:56</b></span></a></div>
+    <div class="part-head"><h3>Second half of the verse</h3><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=956" data-t="956" data-part="Second half of the verse"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>From <b>15:56</b></span></a></div>
     <p class="note">The same sixteen chords with small changes on top. The one difference in the chords is the last one: it lands on D instead of A.</p>
   </div>
 </section>
@@ -233,7 +311,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">Home base. The intro and both lines of the verse start here, and the second half of the verse ends here.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=71"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>1:11</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=71" data-t="71" data-part="D"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>1:11</b></span></a>
     <label class="got" for="got-d"><input type="checkbox" id="got-d" data-got="d"> I can play this</label>
   </footer>
 </article>
@@ -252,7 +330,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">Lay the index flat across the top two strings at fret 3 and put the middle finger on the G string at fret 4. The open D string is the bass.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=80"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>1:20</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=80" data-t="80" data-part="G/D"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>1:20</b></span></a>
     <label class="got" for="got-g-over-d"><input type="checkbox" id="got-g-over-d" data-got="g-over-d"> I can play this</label>
   </footer>
 </article>
@@ -271,7 +349,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">Nothing changes in the hand. Slide it up two frets and let the open D string keep ringing underneath.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=95"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>1:35</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=95" data-t="95" data-part="A/D"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>1:35</b></span></a>
     <label class="got" for="got-a-over-d"><input type="checkbox" id="got-a-over-d" data-got="a-over-d"> I can play this</label>
   </footer>
 </article>
@@ -290,7 +368,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">The top two strings hold the same frets as D. Only the bass changes: in the video the middle finger reaches across to the low E string at fret 3 and the index takes the high E string.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=327"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>5:27</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=327" data-t="327" data-part="Gmaj7"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>5:27</b></span></a>
     <label class="got" for="got-gmaj7"><input type="checkbox" id="got-gmaj7" data-got="gmaj7"> I can play this</label>
   </footer>
 </article>
@@ -309,7 +387,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">The instructor uses his first and second fingers on the D and G strings and his third on the A string at fret 4, and says to find your own fingering if that is uncomfortable. The B string is left out.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=374"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>6:14</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=374" data-t="374" data-part="A/C#"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>6:14</b></span></a>
     <label class="got" for="got-a-over-csharp"><input type="checkbox" id="got-a-over-csharp" data-got="a-over-csharp"> I can play this</label>
   </footer>
 </article>
@@ -328,7 +406,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">The ring finger adds fret 4 on the A string. The instructor notes that this bar only sounds the low E and the top two strings, so that finger is optional.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=423"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>7:03</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=423" data-t="423" data-part="F#m7"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>7:03</b></span></a>
     <label class="got" for="got-fsharp-m7"><input type="checkbox" id="got-fsharp-m7" data-got="fsharp-m7"> I can play this</label>
   </footer>
 </article>
@@ -347,7 +425,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">This hand stays down for the next two chords. Only the bass note underneath it changes.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=479"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>7:59</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=479" data-t="479" data-part="Bm"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>7:59</b></span></a>
     <label class="got" for="got-bm"><input type="checkbox" id="got-bm" data-got="bm"> I can play this</label>
   </footer>
 </article>
@@ -366,7 +444,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">Lift the index off the A string so it rings open as the bass. The other three fingers do not move.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=523"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>8:43</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=523" data-t="523" data-part="Bm/A"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>8:43</b></span></a>
     <label class="got" for="got-bm-over-a"><input type="checkbox" id="got-bm-over-a" data-got="bm-over-a"> I can play this</label>
   </footer>
 </article>
@@ -385,7 +463,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">The thumb wraps over the top to fret 4. The lesson calls this chord B minor over A flat, which is the same note as G#, and says another finger can take the bass if the thumb will not reach.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=546"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>9:06</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=546" data-t="546" data-part="Bm/G#"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>9:06</b></span></a>
     <label class="got" for="got-bm-over-gsharp"><input type="checkbox" id="got-bm-over-gsharp" data-got="bm-over-gsharp"> I can play this</label>
   </footer>
 </article>
@@ -404,7 +482,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">The fretting fingers come right off. The thumb holds G at fret 3 while the open B and high E strings ring.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=588"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>9:48</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=588" data-t="588" data-part="G6"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>9:48</b></span></a>
     <label class="got" for="got-g6"><input type="checkbox" id="got-g6" data-got="g6"> I can play this</label>
   </footer>
 </article>
@@ -423,7 +501,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">It appears twice in line 2. Both times the B string rises to fret 3 for a moment, a suspended sound, and comes back.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=672"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>11:12</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=672" data-t="672" data-part="A"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>11:12</b></span></a>
     <label class="got" for="got-a"><input type="checkbox" id="got-a" data-got="a"> I can play this</label>
   </footer>
 </article>
@@ -442,7 +520,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">Keep the barre at fret 2 and add the middle finger on the G string at fret 3. That one note is the difference between F#m7 and F#7.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=698"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>11:38</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=698" data-t="698" data-part="F#7"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>11:38</b></span></a>
     <label class="got" for="got-fsharp-7"><input type="checkbox" id="got-fsharp-7" data-got="fsharp-7"> I can play this</label>
   </footer>
 </article>
@@ -461,7 +539,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">Same shape as Bm, five frets higher. With the capo on fret 2 this sits at the ninth fret of the guitar, which is how the instructor describes it.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=807"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>13:27</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=807" data-t="807" data-part="Em"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>13:27</b></span></a>
     <label class="got" for="got-em"><input type="checkbox" id="got-em" data-got="em"> I can play this</label>
   </footer>
 </article>
@@ -480,7 +558,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">The video clearly shows the middle finger on the low E string at fret 3 and the index at fret 2. The ring and pinky on the top two strings are harder to see, so those two follow the usual four-finger G.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=840"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>14:00</b></span></a>
+    <a class="watch" href="https://youtu.be/o3AstcWl7E8?t=840" data-t="840" data-part="G"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>14:00</b></span></a>
     <label class="got" for="got-g"><input type="checkbox" id="got-g" data-got="g"> I can play this</label>
   </footer>
 </article></div>
@@ -511,7 +589,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
 <section aria-labelledby="h-reach">
   <h2 id="h-reach">Reaches worth drilling</h2>
   <p>A few single notes that the instructor singles out because the hand has to stretch for them while a shape stays down.</p>
-  <ul class="reaches"><li><strong>G/D in the intro</strong><p>With the shape held down, the pinky stretches up to fret 7 on the high E string.</p><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=212"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>3:32</b></span></a></li><li><strong>A/D in the intro</strong><p>The arrangement reaches this chord by sliding the pinky along the G string from fret 4 to fret 6 rather than moving the whole shape. The instructor calls it a bit of a stretch.</p><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=157"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:37</b></span></a></li><li><strong>A/C#</strong><p>The pinky hammers fret 5 on the high E string and pulls off. He says this one is awkward.</p><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=398"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>6:38</b></span></a></li><li><strong>F#7</strong><p>The pinky slides from fret 5 to fret 7 on the high E string while the barre stays down.</p><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=715"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>11:55</b></span></a></li><li><strong>D in line 2</strong><p>A stretch up to fret 5 on the high E string without letting go of D.</p><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=798"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>13:18</b></span></a></li></ul>
+  <ul class="reaches"><li><strong>G/D in the intro</strong><p>With the shape held down, the pinky stretches up to fret 7 on the high E string.</p><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=212" data-t="212" data-part="G/D in the intro"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>3:32</b></span></a></li><li><strong>A/D in the intro</strong><p>The arrangement reaches this chord by sliding the pinky along the G string from fret 4 to fret 6 rather than moving the whole shape. The instructor calls it a bit of a stretch.</p><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=157" data-t="157" data-part="A/D in the intro"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:37</b></span></a></li><li><strong>A/C#</strong><p>The pinky hammers fret 5 on the high E string and pulls off. He says this one is awkward.</p><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=398" data-t="398" data-part="A/C#"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>6:38</b></span></a></li><li><strong>F#7</strong><p>The pinky slides from fret 5 to fret 7 on the high E string while the barre stays down.</p><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=715" data-t="715" data-part="F#7"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>11:55</b></span></a></li><li><strong>D in line 2</strong><p>A stretch up to fret 5 on the high E string without letting go of D.</p><a class="watch" href="https://youtu.be/o3AstcWl7E8?t=798" data-t="798" data-part="D in line 2"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>13:18</b></span></a></li></ul>
 </section>
 
 <section aria-labelledby="h-order">
@@ -528,7 +606,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
 
 <section aria-labelledby="h-video">
   <h2 id="h-video">Find it in the video</h2>
-  <ol class="chapters"><li><a href="https://youtu.be/o3AstcWl7E8?t=0"><span class="t">0:00</span><span class="ct">Intro</span></a><span class="what">What the lesson covers.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=8"><span class="t">0:08</span><span class="ct">Demo</span></a><span class="what">The arrangement played at speed.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=50"><span class="t">0:50</span><span class="ct">Overview</span></a><span class="what">Tuning, and where the capo goes.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=61"><span class="t">1:01</span><span class="ct">Intro</span></a><span class="what">The three intro chords, then the intro one bar at a time.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=255"><span class="t">4:15</span><span class="ct">Intro Play Through</span></a><span class="what">The whole intro, slowly.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=266"><span class="t">4:26</span><span class="ct">Verse (Part 1)</span></a><span class="what">The first half of the verse, chord by chord. Line 2 starts at 10:25.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=920"><span class="t">15:20</span><span class="ct">1st Play Through of Verse</span></a><span class="what">The first half, slowly.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=956"><span class="t">15:56</span><span class="ct">Verse (Part 2)</span></a><span class="what">The second half: the same chords with small changes, ending on D.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=1318"><span class="t">21:58</span><span class="ct">2nd Play Through of Verse</span></a><span class="what">The second half, slowly.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=1387"><span class="t">23:07</span><span class="ct">Outro</span></a><span class="what">Where the rest of the lesson lives.</span></li></ol>
+  <ol class="chapters"><li><a href="https://youtu.be/o3AstcWl7E8?t=0" data-t="0" data-part="Intro"><span class="t">0:00</span><span class="ct">Intro</span></a><span class="what">What the lesson covers.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=8" data-t="8" data-part="Demo"><span class="t">0:08</span><span class="ct">Demo</span></a><span class="what">The arrangement played at speed.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=50" data-t="50" data-part="Overview"><span class="t">0:50</span><span class="ct">Overview</span></a><span class="what">Tuning, and where the capo goes.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=61" data-t="61" data-part="Intro"><span class="t">1:01</span><span class="ct">Intro</span></a><span class="what">The three intro chords, then the intro one bar at a time.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=255" data-t="255" data-part="Intro Play Through"><span class="t">4:15</span><span class="ct">Intro Play Through</span></a><span class="what">The whole intro, slowly.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=266" data-t="266" data-part="Verse (Part 1)"><span class="t">4:26</span><span class="ct">Verse (Part 1)</span></a><span class="what">The first half of the verse, chord by chord. Line 2 starts at 10:25.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=920" data-t="920" data-part="1st Play Through of Verse"><span class="t">15:20</span><span class="ct">1st Play Through of Verse</span></a><span class="what">The first half, slowly.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=956" data-t="956" data-part="Verse (Part 2)"><span class="t">15:56</span><span class="ct">Verse (Part 2)</span></a><span class="what">The second half: the same chords with small changes, ending on D.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=1318" data-t="1318" data-part="2nd Play Through of Verse"><span class="t">21:58</span><span class="ct">2nd Play Through of Verse</span></a><span class="what">The second half, slowly.</span></li><li><a href="https://youtu.be/o3AstcWl7E8?t=1387" data-t="1387" data-part="Outro"><span class="t">23:07</span><span class="ct">Outro</span></a><span class="what">Where the rest of the lesson lives.</span></li></ol>
 </section>
 
 <footer class="source">
@@ -559,6 +637,207 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
     });
   });
   render();
+})();
+</script>
+<script>
+(function () {
+  // Timestamp links are ordinary YouTube links. This turns a tap on one into "play
+  // that moment in the video docked on this page". Nothing is requested from YouTube
+  // until the first tap, and if the player cannot load the links go back to being links.
+  var VIDEO = 'o3AstcWl7E8';
+  var dock = document.getElementById('player');
+  // Opened from disk there is no referrer and YouTube refuses to embed, so do nothing.
+  if (!dock || location.protocol === 'file:' || !Element.prototype.closest) return;
+  var root = document.documentElement;
+  var page = document.querySelector('main');
+  var titleEl = document.getElementById('player-title');
+  var msgEl = document.getElementById('player-msg');
+  var msgText = document.getElementById('player-msg-text');
+  var msgLink = document.getElementById('player-msg-link');
+  var speedBtn = document.getElementById('player-speed');
+  var loopBtn = document.getElementById('player-loop');
+  var closeBtn = document.getElementById('player-close');
+  var RATES = [1, 0.75, 0.5];
+  var player = null, ready = false, loading = false, dead = false;
+  var want = 0, rate = 1, loopA = null, loopB = null, loopTimer = null, slowTimer = null;
+  var calm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function mmss(t) {
+    t = Math.max(0, Math.floor(t));
+    var s = t % 60;
+    return Math.floor(t / 60) + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function now() {
+    try { return player.getCurrentTime() || 0; } catch (e) { return want; }
+  }
+  // The dock is a band across the top that pushes the page down or, in a wide
+  // window, a box fixed in the right margin that covers nothing at the top.
+  function bandHeight() {
+    if (dock.hidden || getComputedStyle(dock).position !== 'sticky') return 0;
+    return dock.getBoundingClientRect().height;
+  }
+  function measure() { root.style.setProperty('--player-h', Math.round(bandHeight()) + 'px'); }
+  function scrollByY(dy, smooth) {
+    if (!dy) return;
+    try { window.scrollBy({ top: dy, left: 0, behavior: smooth && !calm ? 'smooth' : 'instant' }); }
+    catch (e) { window.scrollBy(0, dy); }
+  }
+  // Something in the page that is on screen now, to hold steady while the layout changes.
+  function probe() {
+    var r = page.getBoundingClientRect();
+    var x = r.left + Math.min(120, r.width / 2);
+    for (var y = bandHeight() + 16; y < window.innerHeight; y += 40) {
+      var el = document.elementFromPoint(x, y);
+      if (el && el !== page && page.contains(el) && el.getBoundingClientRect().height < window.innerHeight) return el;
+    }
+    return page;
+  }
+  // Change the layout, then scroll so that `ref` is where it was on screen before.
+  function hold(ref, change) {
+    var before = ref.getBoundingClientRect().top;
+    change();
+    measure();
+    scrollByY(ref.getBoundingClientRect().top - before, false);
+  }
+  function say(text) {
+    msgText.textContent = text;
+    msgLink.href = 'https://youtu.be/' + VIDEO + '?t=' + Math.floor(want);
+    msgEl.hidden = false;
+  }
+  function hush() { msgEl.hidden = true; }
+
+  function openDock(origin) {
+    // A tap inside the dock itself (a section shortcut) has no card to bring into view.
+    var anchor = origin && !dock.contains(origin) ? (origin.closest('.chord, .part, .addon') || origin) : null;
+    if (dock.hidden) {
+      hold(anchor || probe(), function () {  // the page is rearranged: keep it where it was
+        dock.hidden = false;
+        root.classList.add('dock-open');
+      });
+    }
+    if (anchor) {
+      var under = anchor.getBoundingClientRect().top - (bandHeight() + 8);
+      if (under < 0) scrollByY(under, true);  // bring the tapped card out from under the dock
+    }
+  }
+  function closeDock() {
+    loopOff();
+    if (ready) { try { player.pauseVideo(); } catch (e) {} }
+    hold(probe(), function () {
+      dock.hidden = true;
+      root.classList.remove('dock-open');
+    });
+  }
+
+  function play(t, part) {
+    want = t;
+    titleEl.textContent = (part ? part + ' · ' : '') + mmss(t);
+    loopOff();
+    if (ready) { player.seekTo(t, true); player.playVideo(); }
+    else if (!loading) load();
+  }
+  function load() {
+    loading = true;
+    say('Loading the video…');
+    window.onYouTubeIframeAPIReady = build;
+    var s = document.createElement('script');
+    s.src = 'https://www.youtube.com/iframe_api';
+    s.onerror = giveUp;
+    document.head.appendChild(s);
+    slowTimer = setTimeout(function () {
+      if (!ready && !dead) say('The video is taking a while to load.');
+    }, 10000);
+  }
+  function build() {
+    player = new YT.Player('player-video', {
+      host: 'https://www.youtube-nocookie.com',
+      videoId: VIDEO,
+      playerVars: { start: Math.floor(want), autoplay: 1, playsinline: 1, rel: 0 },
+      events: {
+        onReady: function () {
+          ready = true;
+          clearTimeout(slowTimer);
+          hush();
+          loopBtn.disabled = false;
+          if (rate !== 1) player.setPlaybackRate(rate);
+          player.seekTo(want, true);
+          player.playVideo();
+        },
+        onError: giveUp,
+        onPlaybackRateChange: function (e) { rate = e.data; paintSpeed(); }
+      }
+    });
+  }
+  function giveUp() {
+    dead = true;  // from here on the timestamps open YouTube, as they do without this script
+    loopOff();
+    loopBtn.disabled = true;
+    clearTimeout(slowTimer);
+    say('The video could not be played here.');
+  }
+
+  function paintSpeed() {
+    speedBtn.textContent = rate + '×';
+    speedBtn.setAttribute('aria-label', 'Playback speed ' + rate + '×. Tap to change.');
+  }
+  speedBtn.addEventListener('click', function () {
+    rate = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
+    paintSpeed();
+    if (ready) player.setPlaybackRate(rate);
+  });
+
+  // One button, three presses: mark the start, mark the end (the loop begins), stop.
+  function paintLoop() {
+    var on = loopB !== null;
+    loopBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (on) {
+      loopBtn.textContent = mmss(loopA) + '–' + mmss(loopB);
+      loopBtn.setAttribute('aria-label', 'Looping ' + mmss(loopA) + ' to ' + mmss(loopB) + '. Tap to stop.');
+    } else {
+      loopBtn.textContent = loopA !== null ? 'Loop to here' : 'Loop from here';
+      loopBtn.removeAttribute('aria-label');
+    }
+  }
+  function loopOff() {
+    loopA = loopB = null;
+    clearInterval(loopTimer);
+    loopTimer = null;
+    paintLoop();
+  }
+  function loopTick() {
+    if (!ready || loopB === null) return;
+    var t = now(), ended = false;
+    try { ended = player.getPlayerState() === 0; } catch (e) {}
+    if (ended || t >= loopB || t < loopA - 1) {
+      player.seekTo(loopA, true);
+      if (ended) player.playVideo();
+    }
+  }
+  loopBtn.addEventListener('click', function () {
+    if (!ready) return;
+    var t = now();
+    if (loopB !== null) { loopOff(); return; }
+    if (loopA === null) { loopA = t; paintLoop(); return; }
+    if (t < loopA) { loopB = loopA; loopA = t; } else { loopB = t; }
+    if (loopB - loopA < 2) loopB = loopA + 2;
+    paintLoop();
+    player.seekTo(loopA, true);
+    player.playVideo();
+    loopTimer = setInterval(loopTick, 200);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (dead || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target.closest('a[data-t]');
+    if (!a) return;
+    e.preventDefault();
+    openDock(a);
+    play(parseFloat(a.getAttribute('data-t')), a.getAttribute('data-part'));
+  });
+  closeBtn.addEventListener('click', closeDock);
+  window.addEventListener('resize', function () { if (!dock.hidden) measure(); });
+  paintSpeed();
+  paintLoop();
 })();
 </script>
 </body>

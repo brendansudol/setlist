@@ -48,7 +48,7 @@ page before the others. The reply was:
 
 > One page first
 
-This is that one page. The other two songs do not have the player yet.
+This was that one page. The other two songs got the same player afterwards.
 
 The first version put the video in a band across the top at every window
 size. After trying it in a desktop browser, the next request was:
@@ -185,10 +185,11 @@ The same rules as the other songs:
   written out.
 - **Fingering is labelled honestly**, as described above.
 
-One rule from the other songs is dropped here. They have no embedded player,
-because the pages were first made for a host that blocked iframes. GitHub
-Pages does not, so this page has one. The page is still a single file and
-still contains no footage: the video is played by YouTube's own player.
+One rule from the earlier songs was dropped here first. They had no embedded
+player, because the pages were first made for a host that blocked iframes.
+GitHub Pages does not, so this page got one, and the other two followed. The
+page is still a single file and still contains no footage: the video is
+played by YouTube's own player.
 
 ## Design
 
@@ -210,6 +211,11 @@ Same layout, type and colour rule as the other songs. What is specific here:
 
 Every timestamp on the page is an ordinary link to YouTube. A script at the
 bottom of the page turns a tap on one into "play that moment here".
+
+All three songs have this player. Its styles, markup and script are the same
+text in this `build.py`, in `your-song/build.py` and pasted into
+`heart-of-life/index.html`; only the video, the shortcuts and the name of one
+colour differ. A change to the player has to be made in all three.
 
 - **One player, which stays on screen.** It appears on the first tap and stays
   put while the page scrolls, so the video and a diagram are visible together.

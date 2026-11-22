@@ -4,8 +4,9 @@
 
 [`index.html`](index.html) is a one-file explainer for the six chord shapes in the
 intro and verse of "The Heart of Life", worked out from a YouTube guitar lesson.
-This file records where the content came from, how the page was produced, and
-what you would need to do the same for another lesson.
+Tapping any timestamp plays that moment of the lesson in a YouTube player that
+stays on screen. This file records where the content came from, how the page
+was produced, and what you would need to do the same for another lesson.
 
 ## Source
 
@@ -107,9 +108,38 @@ The thumb frets the low E string on every chord except A.
 - **Fingering is labelled honestly.** Frets and strings come from the lesson.
   Finger numbers are the standard fingering for each shape, and the page says
   so.
-- **No embedded player.** The page was first published on a host that blocks
-  remote images and iframes. It still has none, which also keeps it to one
-  file.
+
+The page was first published with a fourth rule, no embedded player, because
+its first host blocked remote images and iframes. GitHub Pages does not, and
+that rule has been dropped; see the next section. The page is still one file
+and still contains no footage.
+
+## The docked player
+
+Added after the page was first published. The player was tried on
+[All The Small Things](../all-the-small-things/README.md#the-docked-player)
+first, and the request that brought it here was:
+
+> yes, push it live and can we also incorporate for the other songs too
+
+It is the same player, and that write-up describes how it behaves at each
+window width, the speed and loop buttons, and the fallback to plain links.
+What is specific to this page:
+
+- **It was added by editing `index.html`,** because this page has no
+  generator. A one-off script pasted in the player's styles, markup and
+  script from the All The Small Things generator and gave each timestamp
+  link its time and a name (`data-t` and `data-part`). The script was not
+  kept.
+- **23 timestamps play in the page:** the six cards, the two pinky notes, the
+  four links under the picking section, the seven chapters and the four
+  shortcuts.
+- **The shortcuts** beside the video on a wider window are Chords (1:08),
+  Pattern (3:11), Pinky notes (5:05) and Melody (8:45).
+- **Checked** in a desktop browser at 1152 by 630, 900 by 700 and 375 by 812:
+  a tap plays the right moment of the right video, the shortcuts, speed and
+  loop work, a bar tapped in the loop lands in view, and closing the video
+  leaves the page where it was. It was not tested on a real phone.
 
 ## Design
 
@@ -121,8 +151,9 @@ The thumb frets the low E string on every chord except A.
 - The "I can play this" checkboxes are saved in the browser's `localStorage`,
   wrapped in `try`/`catch` so the page still works where storage is blocked.
   Nothing is sent anywhere.
-- The only outside request is Google Fonts (Atkinson Hyperlegible and
-  Bricolage Grotesque), with system fonts as the fallback.
+- Until a timestamp is tapped, the only outside request is Google Fonts
+  (Atkinson Hyperlegible and Bricolage Grotesque), with system fonts as the
+  fallback. The first tap loads YouTube's player.
 
 ## What is not in this repository
 

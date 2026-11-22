@@ -79,7 +79,7 @@ header.top { display: grid; gap: 12px; }
 
 /* chord cards */
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(288px, 1fr)); gap: 14px; }
-.chord { background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--fam); border-radius: 8px; padding: 14px; display: grid; gap: 12px; align-content: start; scroll-margin-top: 12px; }
+.chord { background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--fam); border-radius: 8px; padding: 14px; display: grid; gap: 12px; align-content: start; scroll-margin-top: calc(var(--player-h, 0px) + 12px); /* a bar tapped in the loop lands below the open video */ }
 .chord header { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 2px; align-items: baseline; }
 .chord h3 { font-size: 2rem; font-weight: 800; }
 .meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .8125rem; color: var(--muted); }
@@ -167,15 +167,92 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
 .steps { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; max-width: 62ch; }
 .source { font-size: .875rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 8px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+/* The lesson video. Hidden until a timestamp is tapped; after that it stays on screen
+   while the page scrolls, so the video and a diagram are visible together. Where it
+   sits depends on the width of the window:
+     under 700px   a band across the top: the video, then a row of controls
+     from 700px    the same band, with the controls beside the video
+     from 1100px   a box in the right margin; the reading column slides left to make
+                   room, and the page keeps the whole height of the window
+   The script moves the page itself when the video opens and closes, so the browser's
+   own scroll anchoring is turned off to stop the two corrections adding up. */
+html, body { overflow-anchor: none; }
+.player { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 4px 16px rgb(0 0 0 / .14); }
+.player[hidden] { display: none; }
+.player-in { max-width: 760px; margin: 0 auto; }
+.player-frame { position: relative; width: min(100%, calc(42vh * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; background: #000; }
+.player-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.player-msg { position: absolute; inset: 0; z-index: 1; display: grid; place-content: center; justify-items: center; gap: 8px; padding: 16px; text-align: center; background: #000; color: #fff; font-size: .9375rem; }
+.player-msg[hidden] { display: none; }
+.player-msg a { color: #fff; font-weight: 700; }
+.player-bar { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 14px; }
+.player-title { flex: 1 1 0; min-width: 0; font-weight: 700; font-size: .9375rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pbtn { flex: none; min-width: 44px; min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 99px; background: transparent; color: var(--ink); font: 700 .8125rem/1 var(--font-body); font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.pbtn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.pbtn:disabled { opacity: .45; cursor: default; }
+.pbtn:focus-visible { outline: 3px solid var(--major); outline-offset: 2px; }
+.pbtn-x { width: 40px; min-width: 40px; padding: 0; }
+.pbtn-x svg { display: block; width: 12px; height: 12px; margin: 0 auto; }
+.player-jumps { display: none; }  /* section shortcuts: only where there is room for them */
+
+@media (min-width: 700px) {
+  /* The controls sit beside the video, so the band is only as tall as the video. */
+  .player-in { display: grid; grid-template-columns: auto minmax(0, 1fr); padding: 0 16px; }
+  .player-frame { width: min(54vw, calc(42vh * 16 / 9)); margin: 0; }
+  .player-bar { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; grid-template-rows: auto 1fr auto; gap: 10px 8px; padding: 12px 0 12px 20px; }
+  .player-title { grid-column: 1 / 4; grid-row: 1; font: 700 1.25rem/1.15 var(--font-display); white-space: normal; }
+  .pbtn-x { grid-column: 4; grid-row: 1; align-self: start; }
+  .player-jumps { grid-column: 1 / -1; grid-row: 2; align-self: start; display: flex; flex-wrap: wrap; gap: 6px; }
+  .player-jumps a { display: inline-flex; align-items: center; min-height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: .8125rem; font-weight: 700; text-decoration: none; }
+  .player-jumps a:hover { color: var(--ink); border-color: var(--ink); }
+  #player-speed { grid-column: 1; grid-row: 3; }
+  #player-loop { grid-column: 2; grid-row: 3; }
+}
+@media (min-width: 700px) and (min-height: 600px) { .player-frame { width: min(54vw, calc(34vh * 16 / 9)); } }  /* on a tall window, leave more room for the cards */
+
+@media (min-width: 1100px) {
+  /* The video leaves the reading column for a box on the right. --rail is its width:
+     whatever the window has left over once the column has its full 760px, between
+     340px and 600px, and never so tall that the controls under it leave the screen.
+     --col is the column's width and --edge the margin left on each side of the pair. */
+  :root {
+    --rail: min(clamp(340px, calc(100vw - 784px), 600px), calc((100vh - 220px) * 16 / 9));
+    --col: min(760px, calc(100vw - var(--rail) - 24px));
+    --edge: calc((100vw - var(--col) - var(--rail) - 8px) / 2);
+  }
+  :root.dock-open main { max-width: var(--col); margin-left: var(--edge); margin-right: 0; }
+  .player { position: fixed; top: 16px; right: var(--edge); width: var(--rail); max-height: calc(100vh - 32px); overflow: hidden auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 28px rgb(0 0 0 / .2); }
+  .player-in { display: block; max-width: none; padding: 0; }
+  .player-frame { width: 100%; }
+  .player-bar { padding: 14px 12px 14px 16px; }
+}
+@media print { .player { display: none; } }
 </style>
 </head>
 <body>
+
+<aside class="player" id="player" aria-label="Lesson video" hidden>
+  <div class="player-in">
+    <div class="player-frame">
+      <div id="player-video"></div>
+      <div class="player-msg" id="player-msg" hidden><span id="player-msg-text"></span><a id="player-msg-link" href="https://youtu.be/dgEQvqHTQbw">Open this part on YouTube</a></div>
+    </div>
+    <div class="player-bar">
+      <p class="player-title" id="player-title" aria-live="polite"></p>
+      <nav class="player-jumps" aria-label="Jump to a section"><a href="https://youtu.be/dgEQvqHTQbw?t=68" data-t="68" data-part="Chords">Chords</a><a href="https://youtu.be/dgEQvqHTQbw?t=191" data-t="191" data-part="Pattern">Pattern</a><a href="https://youtu.be/dgEQvqHTQbw?t=305" data-t="305" data-part="Pinky notes">Pinky notes</a><a href="https://youtu.be/dgEQvqHTQbw?t=525" data-t="525" data-part="Melody">Melody</a></nav>
+      <button type="button" class="pbtn" id="player-speed">1×</button>
+      <button type="button" class="pbtn" id="player-loop" aria-pressed="false" disabled>Loop from here</button>
+      <button type="button" class="pbtn pbtn-x" id="player-close" aria-label="Close the video"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </div>
+  </div>
+</aside>
 <main>
 
 <header class="top">
   <p class="eyebrow">Fingerstyle lesson notes</p>
   <h1>The Heart of Life: six chord shapes</h1>
-  <p class="lede">Everything your fretting hand needs for the intro and verse, worked out from Six String Fingerpicking's 12-minute lesson on the John Mayer song. Each shape links to the second it appears in the video.</p>
+  <p class="lede">Everything your fretting hand needs for the intro and verse, worked out from Six String Fingerpicking's 12-minute lesson on the John Mayer song. Tap any time on this page to play that moment of the lesson. The video stays on screen while you read.</p>
   <dl class="facts">
     <div><dt>Tuning</dt><dd>Standard in the lesson. The instructor notes the recording is tuned a half step lower.</dd></div>
     <div><dt>Capo</dt><dd>None</dd></div>
@@ -219,7 +296,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">Getting the thumb over the top this far up the neck is the awkward part. Tilting the neck up a little gives it room.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=101"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>1:41</b></span></a>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=101" data-t="101" data-part="D"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>1:41</b></span></a>
     <label class="got" for="got-d"><input type="checkbox" id="got-d" data-got="d"> I can play this</label>
   </footer>
 </article>
@@ -238,7 +315,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">Lay the index finger flat so it holds both the G and B strings at fret 7.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=120"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:00</b></span></a>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=120" data-t="120" data-part="Bm"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:00</b></span></a>
     <label class="got" for="got-bm"><input type="checkbox" id="got-bm" data-got="bm"> I can play this</label>
   </footer>
 </article>
@@ -257,7 +334,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">Nothing changes in the hand. Keep the Bm shape locked and slide five frets toward the headstock.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=137"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:17</b></span></a>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=137" data-t="137" data-part="F#m"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:17</b></span></a>
     <label class="got" for="got-fsharp-m"><input type="checkbox" id="got-fsharp-m" data-got="fsharp-m"> I can play this</label>
   </footer>
 </article>
@@ -276,7 +353,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">Same fingers as the opening D. Only the thumb&#x27;s fret tells you which chord it is.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=144"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:24</b></span></a>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=144" data-t="144" data-part="G"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:24</b></span></a>
     <label class="got" for="got-g"><input type="checkbox" id="got-g" data-got="g"> I can play this</label>
   </footer>
 </article>
@@ -295,7 +372,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">Your thumb stays on the same fret it held for F#m, two chords earlier.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=150"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:30</b></span></a>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=150" data-t="150" data-part="D/F#"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:30</b></span></a>
     <label class="got" for="got-d-fsharp"><input type="checkbox" id="got-d-fsharp" data-got="d-fsharp"> I can play this</label>
   </footer>
 </article>
@@ -314,7 +391,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   </div>
   <p class="tip">The instructor flattens one finger across all three strings, and says any A fingering you already use is fine. This is the only chord with its bass on the A string.</p>
   <footer>
-    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=158"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:38</b></span></a>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=158" data-t="158" data-part="A"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:38</b></span></a>
     <label class="got" for="got-a"><input type="checkbox" id="got-a" data-got="a"> I can play this</label>
   </footer>
 </article></div>
@@ -337,7 +414,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   <div>
     <h3>D, second bar</h3>
     <p>Keep the whole D shape down and add your pinky on the B string at fret 12, two frets above the index.</p>
-    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=305"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>5:05</b></span></a>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=305" data-t="305" data-part="D, second bar"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>5:05</b></span></a>
   </div>
 </article>
 <article class="addon fam-minor" id="bm-pinky">
@@ -345,7 +422,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
   <div>
     <h3>Bm, second bar</h3>
     <p>Same idea, but the pinky lands on fret 10. That is three frets above the index, one more than on D.</p>
-    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=366"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>6:06</b></span></a>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=366" data-t="366" data-part="Bm, second bar"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>6:06</b></span></a>
   </div>
 </article></div>
 </section>
@@ -368,7 +445,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
     <li>In the second bar of D and Bm the pattern thins out to pinch, tap, pinch, tap, with the pinky note in the second pinch.</li>
     <li>The lesson finishes with a short second-guitar melody on the B and high E strings. That part is easier to watch than to read.</li>
   </ul>
-  <div class="linkrow"><a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=191"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Pattern at <b>3:11</b></span></a> <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=470"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>A chord at <b>7:50</b></span></a> <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=508"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Full loop at <b>8:28</b></span></a> <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=525"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Melody at <b>8:45</b></span></a></div>
+  <div class="linkrow"><a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=191" data-t="191" data-part="Pattern"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Pattern at <b>3:11</b></span></a> <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=470" data-t="470" data-part="A chord"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>A chord at <b>7:50</b></span></a> <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=508" data-t="508" data-part="Full loop"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Full loop at <b>8:28</b></span></a> <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=525" data-t="525" data-part="Melody"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Melody at <b>8:45</b></span></a></div>
 </section>
 
 <section aria-labelledby="h-order">
@@ -384,7 +461,7 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
 
 <section aria-labelledby="h-map">
   <h2 id="h-map">Find it in the video</h2>
-  <ol class="chapters"><li><a href="https://youtu.be/dgEQvqHTQbw?t=0"><span class="t">0:00</span><span class="ct">Introduction</span></a><span class="what">The intro played through at speed.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=68"><span class="t">1:08</span><span class="ct">Chord progression</span></a><span class="what">The tuning note, then all six shapes one at a time.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=191"><span class="t">3:11</span><span class="ct">Basic picking pattern</span></a><span class="what">The one-bar pattern, built up slowly on the D shape.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=305"><span class="t">5:05</span><span class="ct">Pattern variations</span></a><span class="what">Bar two of D, with the pinky note.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=365"><span class="t">6:05</span><span class="ct">Chord specific picking</span></a><span class="what">The pinky note on Bm, then a bar each of F#m, G, D/F# and A.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=525"><span class="t">8:45</span><span class="ct">Melodic embellishments</span></a><span class="what">The second-guitar melody over D and Bm.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=684"><span class="t">11:24</span><span class="ct">Conclusion</span></a><span class="what">How the verse reuses the intro.</span></li></ol>
+  <ol class="chapters"><li><a href="https://youtu.be/dgEQvqHTQbw?t=0" data-t="0" data-part="Introduction"><span class="t">0:00</span><span class="ct">Introduction</span></a><span class="what">The intro played through at speed.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=68" data-t="68" data-part="Chord progression"><span class="t">1:08</span><span class="ct">Chord progression</span></a><span class="what">The tuning note, then all six shapes one at a time.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=191" data-t="191" data-part="Basic picking pattern"><span class="t">3:11</span><span class="ct">Basic picking pattern</span></a><span class="what">The one-bar pattern, built up slowly on the D shape.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=305" data-t="305" data-part="Pattern variations"><span class="t">5:05</span><span class="ct">Pattern variations</span></a><span class="what">Bar two of D, with the pinky note.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=365" data-t="365" data-part="Chord specific picking"><span class="t">6:05</span><span class="ct">Chord specific picking</span></a><span class="what">The pinky note on Bm, then a bar each of F#m, G, D/F# and A.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=525" data-t="525" data-part="Melodic embellishments"><span class="t">8:45</span><span class="ct">Melodic embellishments</span></a><span class="what">The second-guitar melody over D and Bm.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=684" data-t="684" data-part="Conclusion"><span class="t">11:24</span><span class="ct">Conclusion</span></a><span class="what">How the verse reuses the intro.</span></li></ol>
 </section>
 
 <footer class="source">
@@ -415,6 +492,207 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
     });
   });
   render();
+})();
+</script>
+<script>
+(function () {
+  // Timestamp links are ordinary YouTube links. This turns a tap on one into "play
+  // that moment in the video docked on this page". Nothing is requested from YouTube
+  // until the first tap, and if the player cannot load the links go back to being links.
+  var VIDEO = 'dgEQvqHTQbw';
+  var dock = document.getElementById('player');
+  // Opened from disk there is no referrer and YouTube refuses to embed, so do nothing.
+  if (!dock || location.protocol === 'file:' || !Element.prototype.closest) return;
+  var root = document.documentElement;
+  var page = document.querySelector('main');
+  var titleEl = document.getElementById('player-title');
+  var msgEl = document.getElementById('player-msg');
+  var msgText = document.getElementById('player-msg-text');
+  var msgLink = document.getElementById('player-msg-link');
+  var speedBtn = document.getElementById('player-speed');
+  var loopBtn = document.getElementById('player-loop');
+  var closeBtn = document.getElementById('player-close');
+  var RATES = [1, 0.75, 0.5];
+  var player = null, ready = false, loading = false, dead = false;
+  var want = 0, rate = 1, loopA = null, loopB = null, loopTimer = null, slowTimer = null;
+  var calm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function mmss(t) {
+    t = Math.max(0, Math.floor(t));
+    var s = t % 60;
+    return Math.floor(t / 60) + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function now() {
+    try { return player.getCurrentTime() || 0; } catch (e) { return want; }
+  }
+  // The dock is a band across the top that pushes the page down or, in a wide
+  // window, a box fixed in the right margin that covers nothing at the top.
+  function bandHeight() {
+    if (dock.hidden || getComputedStyle(dock).position !== 'sticky') return 0;
+    return dock.getBoundingClientRect().height;
+  }
+  function measure() { root.style.setProperty('--player-h', Math.round(bandHeight()) + 'px'); }
+  function scrollByY(dy, smooth) {
+    if (!dy) return;
+    try { window.scrollBy({ top: dy, left: 0, behavior: smooth && !calm ? 'smooth' : 'instant' }); }
+    catch (e) { window.scrollBy(0, dy); }
+  }
+  // Something in the page that is on screen now, to hold steady while the layout changes.
+  function probe() {
+    var r = page.getBoundingClientRect();
+    var x = r.left + Math.min(120, r.width / 2);
+    for (var y = bandHeight() + 16; y < window.innerHeight; y += 40) {
+      var el = document.elementFromPoint(x, y);
+      if (el && el !== page && page.contains(el) && el.getBoundingClientRect().height < window.innerHeight) return el;
+    }
+    return page;
+  }
+  // Change the layout, then scroll so that `ref` is where it was on screen before.
+  function hold(ref, change) {
+    var before = ref.getBoundingClientRect().top;
+    change();
+    measure();
+    scrollByY(ref.getBoundingClientRect().top - before, false);
+  }
+  function say(text) {
+    msgText.textContent = text;
+    msgLink.href = 'https://youtu.be/' + VIDEO + '?t=' + Math.floor(want);
+    msgEl.hidden = false;
+  }
+  function hush() { msgEl.hidden = true; }
+
+  function openDock(origin) {
+    // A tap inside the dock itself (a section shortcut) has no card to bring into view.
+    var anchor = origin && !dock.contains(origin) ? (origin.closest('.chord, .part, .addon') || origin) : null;
+    if (dock.hidden) {
+      hold(anchor || probe(), function () {  // the page is rearranged: keep it where it was
+        dock.hidden = false;
+        root.classList.add('dock-open');
+      });
+    }
+    if (anchor) {
+      var under = anchor.getBoundingClientRect().top - (bandHeight() + 8);
+      if (under < 0) scrollByY(under, true);  // bring the tapped card out from under the dock
+    }
+  }
+  function closeDock() {
+    loopOff();
+    if (ready) { try { player.pauseVideo(); } catch (e) {} }
+    hold(probe(), function () {
+      dock.hidden = true;
+      root.classList.remove('dock-open');
+    });
+  }
+
+  function play(t, part) {
+    want = t;
+    titleEl.textContent = (part ? part + ' · ' : '') + mmss(t);
+    loopOff();
+    if (ready) { player.seekTo(t, true); player.playVideo(); }
+    else if (!loading) load();
+  }
+  function load() {
+    loading = true;
+    say('Loading the video…');
+    window.onYouTubeIframeAPIReady = build;
+    var s = document.createElement('script');
+    s.src = 'https://www.youtube.com/iframe_api';
+    s.onerror = giveUp;
+    document.head.appendChild(s);
+    slowTimer = setTimeout(function () {
+      if (!ready && !dead) say('The video is taking a while to load.');
+    }, 10000);
+  }
+  function build() {
+    player = new YT.Player('player-video', {
+      host: 'https://www.youtube-nocookie.com',
+      videoId: VIDEO,
+      playerVars: { start: Math.floor(want), autoplay: 1, playsinline: 1, rel: 0 },
+      events: {
+        onReady: function () {
+          ready = true;
+          clearTimeout(slowTimer);
+          hush();
+          loopBtn.disabled = false;
+          if (rate !== 1) player.setPlaybackRate(rate);
+          player.seekTo(want, true);
+          player.playVideo();
+        },
+        onError: giveUp,
+        onPlaybackRateChange: function (e) { rate = e.data; paintSpeed(); }
+      }
+    });
+  }
+  function giveUp() {
+    dead = true;  // from here on the timestamps open YouTube, as they do without this script
+    loopOff();
+    loopBtn.disabled = true;
+    clearTimeout(slowTimer);
+    say('The video could not be played here.');
+  }
+
+  function paintSpeed() {
+    speedBtn.textContent = rate + '×';
+    speedBtn.setAttribute('aria-label', 'Playback speed ' + rate + '×. Tap to change.');
+  }
+  speedBtn.addEventListener('click', function () {
+    rate = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
+    paintSpeed();
+    if (ready) player.setPlaybackRate(rate);
+  });
+
+  // One button, three presses: mark the start, mark the end (the loop begins), stop.
+  function paintLoop() {
+    var on = loopB !== null;
+    loopBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (on) {
+      loopBtn.textContent = mmss(loopA) + '–' + mmss(loopB);
+      loopBtn.setAttribute('aria-label', 'Looping ' + mmss(loopA) + ' to ' + mmss(loopB) + '. Tap to stop.');
+    } else {
+      loopBtn.textContent = loopA !== null ? 'Loop to here' : 'Loop from here';
+      loopBtn.removeAttribute('aria-label');
+    }
+  }
+  function loopOff() {
+    loopA = loopB = null;
+    clearInterval(loopTimer);
+    loopTimer = null;
+    paintLoop();
+  }
+  function loopTick() {
+    if (!ready || loopB === null) return;
+    var t = now(), ended = false;
+    try { ended = player.getPlayerState() === 0; } catch (e) {}
+    if (ended || t >= loopB || t < loopA - 1) {
+      player.seekTo(loopA, true);
+      if (ended) player.playVideo();
+    }
+  }
+  loopBtn.addEventListener('click', function () {
+    if (!ready) return;
+    var t = now();
+    if (loopB !== null) { loopOff(); return; }
+    if (loopA === null) { loopA = t; paintLoop(); return; }
+    if (t < loopA) { loopB = loopA; loopA = t; } else { loopB = t; }
+    if (loopB - loopA < 2) loopB = loopA + 2;
+    paintLoop();
+    player.seekTo(loopA, true);
+    player.playVideo();
+    loopTimer = setInterval(loopTick, 200);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (dead || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target.closest('a[data-t]');
+    if (!a) return;
+    e.preventDefault();
+    openDock(a);
+    play(parseFloat(a.getAttribute('data-t')), a.getAttribute('data-part'));
+  });
+  closeBtn.addEventListener('click', closeDock);
+  window.addEventListener('resize', function () { if (!dock.hidden) measure(); });
+  paintSpeed();
+  paintLoop();
 })();
 </script>
 </body>

@@ -181,6 +181,11 @@ CHAPTERS = [
     (1387, "Outro", "Where the rest of the lesson lives."),
 ]
 
+# Where each part of the chord map starts in the video. The map's "From" buttons and
+# the shortcuts next to the video both come from this.
+PARTS = [("Intro", 61), ("Verse, line 1", 266), ("Verse, line 2", 625),
+         ("Second half of the verse", 956)]
+
 
 # -------------------------------------------------------------------- checks
 
@@ -250,9 +255,22 @@ def used_in(cid):
 PLAY = '<svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg>'
 
 
-def watch(t, label="Watch at"):
-    return (f'<a class="watch" href="{yt(t)}">{PLAY}'
+def moment(t, part):
+    """Attributes for a timestamp link. It is an ordinary YouTube link; the
+    script at the bottom of the page plays it in the docked player instead,
+    and shows `part` as the name of what is playing."""
+    assert 0 <= t < VIDEO_LENGTH, f"timestamp outside the video: {t}"
+    return f'href="{yt(t)}" data-t="{t}" data-part="{escape(part, quote=True)}"'
+
+
+def watch(t, label="Watch at", part=None):
+    return (f'<a class="watch" {moment(t, part or label)}>{PLAY}'
             f'<span>{escape(label)} <b>{mmss(t)}</b></span></a>')
+
+
+def from_part(name):
+    """The "From m:ss" button on a part of the chord map."""
+    return watch(dict(PARTS)[name], "From", name)
 
 
 def chordbox(ch):
@@ -356,7 +374,7 @@ def card(ch):
   </div>
   <p class="tip">{escape(ch["tip"])}</p>
   <footer>
-    {watch(ch["t"])}
+    {watch(ch["t"], part=ch["name"])}
     <label class="got" for="got-{cid}"><input type="checkbox" id="got-{cid}" data-got="{cid}"> I can play this</label>
   </footer>
 </article>'''
@@ -540,7 +558,7 @@ header.top { display: grid; gap: 12px; }
 
 /* chord cards */
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(288px, 1fr)); gap: 14px; }
-.chord { background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--fam); border-radius: 8px; padding: 14px; display: grid; gap: 12px; align-content: start; scroll-margin-top: 12px; }
+.chord { background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--fam); border-radius: 8px; padding: 14px; display: grid; gap: 12px; align-content: start; scroll-margin-top: calc(var(--player-h, 0px) + 12px); /* a chord tapped in the map lands below the open video */ }
 .chord header { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 2px; align-items: baseline; }
 .chord h3 { font-size: 2rem; font-weight: 800; }
 .meta { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: .8125rem; color: var(--muted); }
@@ -618,7 +636,288 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
 .steps { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; max-width: 62ch; }
 .source { font-size: .875rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 8px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+/* The lesson video. Hidden until a timestamp is tapped; after that it stays on screen
+   while the page scrolls, so the video and a diagram are visible together. Where it
+   sits depends on the width of the window:
+     under 700px   a band across the top: the video, then a row of controls
+     from 700px    the same band, with the controls beside the video
+     from 1100px   a box in the right margin; the reading column slides left to make
+                   room, and the page keeps the whole height of the window
+   The script moves the page itself when the video opens and closes, so the browser's
+   own scroll anchoring is turned off to stop the two corrections adding up. */
+html, body { overflow-anchor: none; }
+.player { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 4px 16px rgb(0 0 0 / .14); }
+.player[hidden] { display: none; }
+.player-in { max-width: 760px; margin: 0 auto; }
+.player-frame { position: relative; width: min(100%, calc(42vh * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; background: #000; }
+.player-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.player-msg { position: absolute; inset: 0; z-index: 1; display: grid; place-content: center; justify-items: center; gap: 8px; padding: 16px; text-align: center; background: #000; color: #fff; font-size: .9375rem; }
+.player-msg[hidden] { display: none; }
+.player-msg a { color: #fff; font-weight: 700; }
+.player-bar { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 14px; }
+.player-title { flex: 1 1 0; min-width: 0; font-weight: 700; font-size: .9375rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pbtn { flex: none; min-width: 44px; min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 99px; background: transparent; color: var(--ink); font: 700 .8125rem/1 var(--font-body); font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.pbtn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.pbtn:disabled { opacity: .45; cursor: default; }
+.pbtn:focus-visible { outline: 3px solid var(--barre); outline-offset: 2px; }
+.pbtn-x { width: 40px; min-width: 40px; padding: 0; }
+.pbtn-x svg { display: block; width: 12px; height: 12px; margin: 0 auto; }
+.player-jumps { display: none; }  /* section shortcuts: only where there is room for them */
+
+@media (min-width: 700px) {
+  /* The controls sit beside the video, so the band is only as tall as the video. */
+  .player-in { display: grid; grid-template-columns: auto minmax(0, 1fr); padding: 0 16px; }
+  .player-frame { width: min(54vw, calc(42vh * 16 / 9)); margin: 0; }
+  .player-bar { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; grid-template-rows: auto 1fr auto; gap: 10px 8px; padding: 12px 0 12px 20px; }
+  .player-title { grid-column: 1 / 4; grid-row: 1; font: 700 1.25rem/1.15 var(--font-display); white-space: normal; }
+  .pbtn-x { grid-column: 4; grid-row: 1; align-self: start; }
+  .player-jumps { grid-column: 1 / -1; grid-row: 2; align-self: start; display: flex; flex-wrap: wrap; gap: 6px; }
+  .player-jumps a { display: inline-flex; align-items: center; min-height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: .8125rem; font-weight: 700; text-decoration: none; }
+  .player-jumps a:hover { color: var(--ink); border-color: var(--ink); }
+  #player-speed { grid-column: 1; grid-row: 3; }
+  #player-loop { grid-column: 2; grid-row: 3; }
+}
+@media (min-width: 700px) and (min-height: 600px) { .player-frame { width: min(54vw, calc(34vh * 16 / 9)); } }  /* on a tall window, leave more room for the cards */
+
+@media (min-width: 1100px) {
+  /* The video leaves the reading column for a box on the right. --rail is its width:
+     whatever the window has left over once the column has its full 760px, between
+     340px and 600px, and never so tall that the controls under it leave the screen.
+     --col is the column's width and --edge the margin left on each side of the pair. */
+  :root {
+    --rail: min(clamp(340px, calc(100vw - 784px), 600px), calc((100vh - 220px) * 16 / 9));
+    --col: min(760px, calc(100vw - var(--rail) - 24px));
+    --edge: calc((100vw - var(--col) - var(--rail) - 8px) / 2);
+  }
+  :root.dock-open main { max-width: var(--col); margin-left: var(--edge); margin-right: 0; }
+  .player { position: fixed; top: 16px; right: var(--edge); width: var(--rail); max-height: calc(100vh - 32px); overflow: hidden auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 28px rgb(0 0 0 / .2); }
+  .player-in { display: block; max-width: none; padding: 0; }
+  .player-frame { width: 100%; }
+  .player-bar { padding: 14px 12px 14px 16px; }
+}
+@media print { .player { display: none; } }
 """
+
+PLAYER = f'''
+<aside class="player" id="player" aria-label="Lesson video" hidden>
+  <div class="player-in">
+    <div class="player-frame">
+      <div id="player-video"></div>
+      <div class="player-msg" id="player-msg" hidden><span id="player-msg-text"></span><a id="player-msg-link" href="https://youtu.be/{VIDEO_ID}">Open this part on YouTube</a></div>
+    </div>
+    <div class="player-bar">
+      <p class="player-title" id="player-title" aria-live="polite"></p>
+      <nav class="player-jumps" aria-label="Jump to a section">{"".join(f'<a {moment(t, name)}>{escape(name)}</a>' for name, t in PARTS)}</nav>
+      <button type="button" class="pbtn" id="player-speed">1×</button>
+      <button type="button" class="pbtn" id="player-loop" aria-pressed="false" disabled>Loop from here</button>
+      <button type="button" class="pbtn pbtn-x" id="player-close" aria-label="Close the video"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </div>
+  </div>
+</aside>
+'''
+
+PLAYER_JS = r"""
+(function () {
+  // Timestamp links are ordinary YouTube links. This turns a tap on one into "play
+  // that moment in the video docked on this page". Nothing is requested from YouTube
+  // until the first tap, and if the player cannot load the links go back to being links.
+  var VIDEO = '__VIDEO__';
+  var dock = document.getElementById('player');
+  // Opened from disk there is no referrer and YouTube refuses to embed, so do nothing.
+  if (!dock || location.protocol === 'file:' || !Element.prototype.closest) return;
+  var root = document.documentElement;
+  var page = document.querySelector('main');
+  var titleEl = document.getElementById('player-title');
+  var msgEl = document.getElementById('player-msg');
+  var msgText = document.getElementById('player-msg-text');
+  var msgLink = document.getElementById('player-msg-link');
+  var speedBtn = document.getElementById('player-speed');
+  var loopBtn = document.getElementById('player-loop');
+  var closeBtn = document.getElementById('player-close');
+  var RATES = [1, 0.75, 0.5];
+  var player = null, ready = false, loading = false, dead = false;
+  var want = 0, rate = 1, loopA = null, loopB = null, loopTimer = null, slowTimer = null;
+  var calm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function mmss(t) {
+    t = Math.max(0, Math.floor(t));
+    var s = t % 60;
+    return Math.floor(t / 60) + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function now() {
+    try { return player.getCurrentTime() || 0; } catch (e) { return want; }
+  }
+  // The dock is a band across the top that pushes the page down or, in a wide
+  // window, a box fixed in the right margin that covers nothing at the top.
+  function bandHeight() {
+    if (dock.hidden || getComputedStyle(dock).position !== 'sticky') return 0;
+    return dock.getBoundingClientRect().height;
+  }
+  function measure() { root.style.setProperty('--player-h', Math.round(bandHeight()) + 'px'); }
+  function scrollByY(dy, smooth) {
+    if (!dy) return;
+    try { window.scrollBy({ top: dy, left: 0, behavior: smooth && !calm ? 'smooth' : 'instant' }); }
+    catch (e) { window.scrollBy(0, dy); }
+  }
+  // Something in the page that is on screen now, to hold steady while the layout changes.
+  function probe() {
+    var r = page.getBoundingClientRect();
+    var x = r.left + Math.min(120, r.width / 2);
+    for (var y = bandHeight() + 16; y < window.innerHeight; y += 40) {
+      var el = document.elementFromPoint(x, y);
+      if (el && el !== page && page.contains(el) && el.getBoundingClientRect().height < window.innerHeight) return el;
+    }
+    return page;
+  }
+  // Change the layout, then scroll so that `ref` is where it was on screen before.
+  function hold(ref, change) {
+    var before = ref.getBoundingClientRect().top;
+    change();
+    measure();
+    scrollByY(ref.getBoundingClientRect().top - before, false);
+  }
+  function say(text) {
+    msgText.textContent = text;
+    msgLink.href = 'https://youtu.be/' + VIDEO + '?t=' + Math.floor(want);
+    msgEl.hidden = false;
+  }
+  function hush() { msgEl.hidden = true; }
+
+  function openDock(origin) {
+    // A tap inside the dock itself (a section shortcut) has no card to bring into view.
+    var anchor = origin && !dock.contains(origin) ? (origin.closest('.chord, .part, .addon') || origin) : null;
+    if (dock.hidden) {
+      hold(anchor || probe(), function () {  // the page is rearranged: keep it where it was
+        dock.hidden = false;
+        root.classList.add('dock-open');
+      });
+    }
+    if (anchor) {
+      var under = anchor.getBoundingClientRect().top - (bandHeight() + 8);
+      if (under < 0) scrollByY(under, true);  // bring the tapped card out from under the dock
+    }
+  }
+  function closeDock() {
+    loopOff();
+    if (ready) { try { player.pauseVideo(); } catch (e) {} }
+    hold(probe(), function () {
+      dock.hidden = true;
+      root.classList.remove('dock-open');
+    });
+  }
+
+  function play(t, part) {
+    want = t;
+    titleEl.textContent = (part ? part + ' · ' : '') + mmss(t);
+    loopOff();
+    if (ready) { player.seekTo(t, true); player.playVideo(); }
+    else if (!loading) load();
+  }
+  function load() {
+    loading = true;
+    say('Loading the video…');
+    window.onYouTubeIframeAPIReady = build;
+    var s = document.createElement('script');
+    s.src = 'https://www.youtube.com/iframe_api';
+    s.onerror = giveUp;
+    document.head.appendChild(s);
+    slowTimer = setTimeout(function () {
+      if (!ready && !dead) say('The video is taking a while to load.');
+    }, 10000);
+  }
+  function build() {
+    player = new YT.Player('player-video', {
+      host: 'https://www.youtube-nocookie.com',
+      videoId: VIDEO,
+      playerVars: { start: Math.floor(want), autoplay: 1, playsinline: 1, rel: 0 },
+      events: {
+        onReady: function () {
+          ready = true;
+          clearTimeout(slowTimer);
+          hush();
+          loopBtn.disabled = false;
+          if (rate !== 1) player.setPlaybackRate(rate);
+          player.seekTo(want, true);
+          player.playVideo();
+        },
+        onError: giveUp,
+        onPlaybackRateChange: function (e) { rate = e.data; paintSpeed(); }
+      }
+    });
+  }
+  function giveUp() {
+    dead = true;  // from here on the timestamps open YouTube, as they do without this script
+    loopOff();
+    loopBtn.disabled = true;
+    clearTimeout(slowTimer);
+    say('The video could not be played here.');
+  }
+
+  function paintSpeed() {
+    speedBtn.textContent = rate + '×';
+    speedBtn.setAttribute('aria-label', 'Playback speed ' + rate + '×. Tap to change.');
+  }
+  speedBtn.addEventListener('click', function () {
+    rate = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
+    paintSpeed();
+    if (ready) player.setPlaybackRate(rate);
+  });
+
+  // One button, three presses: mark the start, mark the end (the loop begins), stop.
+  function paintLoop() {
+    var on = loopB !== null;
+    loopBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (on) {
+      loopBtn.textContent = mmss(loopA) + '–' + mmss(loopB);
+      loopBtn.setAttribute('aria-label', 'Looping ' + mmss(loopA) + ' to ' + mmss(loopB) + '. Tap to stop.');
+    } else {
+      loopBtn.textContent = loopA !== null ? 'Loop to here' : 'Loop from here';
+      loopBtn.removeAttribute('aria-label');
+    }
+  }
+  function loopOff() {
+    loopA = loopB = null;
+    clearInterval(loopTimer);
+    loopTimer = null;
+    paintLoop();
+  }
+  function loopTick() {
+    if (!ready || loopB === null) return;
+    var t = now(), ended = false;
+    try { ended = player.getPlayerState() === 0; } catch (e) {}
+    if (ended || t >= loopB || t < loopA - 1) {
+      player.seekTo(loopA, true);
+      if (ended) player.playVideo();
+    }
+  }
+  loopBtn.addEventListener('click', function () {
+    if (!ready) return;
+    var t = now();
+    if (loopB !== null) { loopOff(); return; }
+    if (loopA === null) { loopA = t; paintLoop(); return; }
+    if (t < loopA) { loopB = loopA; loopA = t; } else { loopB = t; }
+    if (loopB - loopA < 2) loopB = loopA + 2;
+    paintLoop();
+    player.seekTo(loopA, true);
+    player.playVideo();
+    loopTimer = setInterval(loopTick, 200);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (dead || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target.closest('a[data-t]');
+    if (!a) return;
+    e.preventDefault();
+    openDock(a);
+    play(parseFloat(a.getAttribute('data-t')), a.getAttribute('data-part'));
+  });
+  closeBtn.addEventListener('click', closeDock);
+  window.addEventListener('resize', function () { if (!dock.hidden) measure(); });
+  paintSpeed();
+  paintLoop();
+})();
+""".replace("__VIDEO__", VIDEO_ID)
 
 JS = r"""
 (function () {
@@ -652,10 +951,10 @@ def page():
     n = len(CHORDS)
     cards = "".join(card(ch) for ch in CHORDS)
     reaches = "".join(
-        f"<li><strong>{escape(label)}</strong><p>{escape(text)}</p>{watch(t)}</li>"
+        f"<li><strong>{escape(label)}</strong><p>{escape(text)}</p>{watch(t, part=label)}</li>"
         for label, t, text in REACHES)
     chapters = "".join(
-        f'<li><a href="{yt(t)}"><span class="t">{mmss(t)}</span><span class="ct">{escape(title)}</span></a>'
+        f'<li><a {moment(t, title)}><span class="t">{mmss(t)}</span><span class="ct">{escape(title)}</span></a>'
         f'<span class="what">{escape(what)}</span></li>'
         for t, title, what in CHAPTERS)
     return f'''<!DOCTYPE html>
@@ -670,12 +969,13 @@ def page():
 <style>{CSS}</style>
 </head>
 <body>
+{PLAYER}
 <main>
 
 <header class="top">
   <p class="eyebrow">Fingerstyle lesson notes</p>
   <h1>Your Song: {NUMBER_WORDS[n]} chord shapes</h1>
-  <p class="lede">Every fretting-hand shape in the intro and verse of a fingerstyle arrangement, worked out from Six String Fingerpicking's 23-minute lesson on the Elton John song. Each shape links to the moment it appears in the video.</p>
+  <p class="lede">Every fretting-hand shape in the intro and verse of a fingerstyle arrangement, worked out from Six String Fingerpicking's 23-minute lesson on the Elton John song. Tap any time on this page to play that moment of the lesson. The video stays on screen while you read.</p>
   <dl class="facts">
     <div><dt>Tuning</dt><dd>Standard</dd></div>
     <div><dt>Capo</dt><dd>Fret 2 in the lesson. The instructor calls it optional and says fret 1 matches the original.</dd></div>
@@ -688,21 +988,21 @@ def page():
   <h2 id="h-map">The chord map</h2>
   <p>Chords in the order they are played. Tap one to jump to its shape.</p>
   <div class="part">
-    <div class="part-head"><h3>Intro</h3>{watch(61, "From")}</div>
+    <div class="part-head"><h3>Intro</h3>{from_part("Intro")}</div>
     {chips(INTRO)}
   </div>
   <div class="part">
-    <div class="part-head"><h3>Verse, line 1</h3>{watch(266, "From")}</div>
+    <div class="part-head"><h3>Verse, line 1</h3>{from_part("Verse, line 1")}</div>
     {chips(LINE1)}
     <p class="note">The changes come two to a bar: the lesson counts D and Gmaj7 as the first bar, A/C# and F#m7 as the second.</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Verse, line 2</h3>{watch(625, "From")}</div>
+    <div class="part-head"><h3>Verse, line 2</h3>{from_part("Verse, line 2")}</div>
     {chips(LINE2)}
     <p class="note">At 10:25 the instructor plays line 1 again from the top and carries straight on into line 2.</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Second half of the verse</h3>{watch(956, "From")}</div>
+    <div class="part-head"><h3>Second half of the verse</h3>{from_part("Second half of the verse")}</div>
     <p class="note">The same sixteen chords with small changes on top. The one difference in the chords is the last one: it lands on D instead of A.</p>
   </div>
 </section>
@@ -776,6 +1076,7 @@ def page():
 
 </main>
 <script>{JS}</script>
+<script>{PLAYER_JS}</script>
 </body>
 </html>
 '''
