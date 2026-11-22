@@ -12,6 +12,7 @@ each shape appears in the video.
 |---|---|---|
 | The Heart of Life (John Mayer), intro and verse | [heart-of-life/](https://brendansudol.github.io/setlist/heart-of-life/) | [heart-of-life/README.md](heart-of-life/README.md) |
 | Your Song (Elton John), intro and verse | [your-song/](https://brendansudol.github.io/setlist/your-song/) | [your-song/README.md](your-song/README.md) |
+| All The Small Things (Blink-182), intro to chorus | [all-the-small-things/](https://brendansudol.github.io/setlist/all-the-small-things/) | [all-the-small-things/README.md](all-the-small-things/README.md) |
 
 ## Layout
 
@@ -24,14 +25,20 @@ your-song/
   index.html            the explainer page, generated
   build.py              the data and the generator for that page
   README.md             source, prompt, process and data for that page
+all-the-small-things/
+  index.html            the explainer page, generated
+  build.py              the data and the generator for that page
+  README.md             source, prompt, process and data for that page
 .nojekyll               tells GitHub Pages to serve the files as they are
 ```
 
 Every page is plain HTML with inline CSS, inline SVG and a few lines of inline
 JavaScript, and the generated HTML is committed, so the site needs no build
-step to deploy. `your-song/index.html` is produced by
-`python3 your-song/build.py` (standard library only). The generator for
-`heart-of-life` was not kept, so that page is edited by hand.
+step to deploy. `your-song` and `all-the-small-things` each have their own
+`build.py` (standard library only); run it to regenerate that folder's
+`index.html`. The two scripts are separate copies that share most of their
+code. The generator for `heart-of-life` was not kept, so that page is edited
+by hand.
 
 ## Adding a song
 
