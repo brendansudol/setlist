@@ -11,6 +11,7 @@ each shape appears in the video.
 | Song | Page | How it was made |
 |---|---|---|
 | The Heart of Life (John Mayer), intro and verse | [heart-of-life/](https://brendansudol.github.io/setlist/heart-of-life/) | [heart-of-life/README.md](heart-of-life/README.md) |
+| Your Song (Elton John), intro and verse | [your-song/](https://brendansudol.github.io/setlist/your-song/) | [your-song/README.md](your-song/README.md) |
 
 ## Layout
 
@@ -19,17 +20,24 @@ index.html              the song list (site home page)
 heart-of-life/
   index.html            the explainer page, one self-contained file
   README.md             source, prompt, process and data for that page
+your-song/
+  index.html            the explainer page, generated
+  build.py              the data and the generator for that page
+  README.md             source, prompt, process and data for that page
 .nojekyll               tells GitHub Pages to serve the files as they are
 ```
 
-There is no build step. Every page is plain HTML with inline CSS, inline SVG
-and a few lines of inline JavaScript.
+Every page is plain HTML with inline CSS, inline SVG and a few lines of inline
+JavaScript, and the generated HTML is committed, so the site needs no build
+step to deploy. `your-song/index.html` is produced by
+`python3 your-song/build.py` (standard library only). The generator for
+`heart-of-life` was not kept, so that page is edited by hand.
 
 ## Adding a song
 
-1. Follow the pipeline in
-   [heart-of-life/README.md](heart-of-life/README.md#doing-this-for-another-lesson).
-2. Put the result in a new folder with its own `index.html` and `README.md`.
+1. Follow the pipeline in [your-song/README.md](your-song/README.md#process).
+2. Copy `your-song/build.py` into a new folder, replace the data at the top,
+   and run it. Write a `README.md` next to it.
 3. Add the song to the list in `index.html` and to the table above.
 
 ## Hosting
