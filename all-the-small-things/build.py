@@ -126,6 +126,10 @@ CHAPTERS = [
     (1046, "Outro", "Where the rest of the lesson lives."),
 ]
 
+# Where each section starts in the video. The song map's "From" buttons and the
+# section shortcuts next to the video both come from this.
+PARTS = [("Intro", 96), ("Verse", 284), ("Pre-chorus", 706), ("Chorus", 823)]
+
 
 # -------------------------------------------------------------------- checks
 
@@ -171,6 +175,8 @@ def check():
     assert used == set(C), f"chords never used: {set(C) - used}"
     times = [t for t, _, _ in CHAPTERS]
     assert times == sorted(times) and times[-1] < VIDEO_LENGTH, "chapters out of order"
+    assert [name.lower() for name, _ in PARTS] == [name for name, _ in SECTIONS], "PARTS and SECTIONS differ"
+    assert all(t in times for _, t in PARTS), "a section does not start where its chapter does"
 
 
 def used_in(cid):
@@ -195,6 +201,11 @@ def moment(t, part):
 def watch(t, label="Watch at", part=None):
     return (f'<a class="watch" {moment(t, part or label)}>{PLAY}'
             f'<span>{escape(label)} <b>{mmss(t)}</b></span></a>')
+
+
+def from_part(name):
+    """The "From m:ss" button on a section of the song map."""
+    return watch(dict(PARTS)[name], "From", name)
 
 
 def chordbox(ch):
@@ -544,16 +555,20 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
 .source { font-size: .875rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 8px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 
-/* The docked lesson video. Hidden until a timestamp is tapped, then it sticks to the
-   top of the screen so the video and the diagram below it are visible together.
-   The script moves the page itself when the dock opens and closes, so the browser's
+/* The lesson video. Hidden until a timestamp is tapped; after that it stays on screen
+   while the page scrolls, so the video and a diagram are visible together. Where it
+   sits depends on the width of the window:
+     under 700px   a band across the top: the video, then a row of controls
+     from 700px    the same band, with the controls beside the video
+     from 1100px   a box in the right margin; the reading column slides left to make
+                   room, and the page keeps the whole height of the window
+   The script moves the page itself when the video opens and closes, so the browser's
    own scroll anchoring is turned off to stop the two corrections adding up. */
 html, body { overflow-anchor: none; }
 .player { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 4px 16px rgb(0 0 0 / .14); }
 .player[hidden] { display: none; }
 .player-in { max-width: 760px; margin: 0 auto; }
 .player-frame { position: relative; width: min(100%, calc(42vh * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; background: #000; }
-@media (min-width: 700px) and (min-height: 600px) { .player-frame { width: min(100%, calc(34vh * 16 / 9)); } }  /* on a big screen, leave more room for the cards */
 .player-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
 .player-msg { position: absolute; inset: 0; z-index: 1; display: grid; place-content: center; justify-items: center; gap: 8px; padding: 16px; text-align: center; background: #000; color: #fff; font-size: .9375rem; }
 .player-msg[hidden] { display: none; }
@@ -566,6 +581,39 @@ html, body { overflow-anchor: none; }
 .pbtn:focus-visible { outline: 3px solid var(--power); outline-offset: 2px; }
 .pbtn-x { width: 40px; min-width: 40px; padding: 0; }
 .pbtn-x svg { display: block; width: 12px; height: 12px; margin: 0 auto; }
+.player-jumps { display: none; }  /* section shortcuts: only where there is room for them */
+
+@media (min-width: 700px) {
+  /* The controls sit beside the video, so the band is only as tall as the video. */
+  .player-in { display: grid; grid-template-columns: auto minmax(0, 1fr); padding: 0 16px; }
+  .player-frame { width: min(54vw, calc(42vh * 16 / 9)); margin: 0; }
+  .player-bar { display: grid; grid-template-columns: auto auto minmax(0, 1fr) auto; grid-template-rows: auto 1fr auto; gap: 10px 8px; padding: 12px 0 12px 20px; }
+  .player-title { grid-column: 1 / 4; grid-row: 1; font: 700 1.25rem/1.15 var(--font-display); white-space: normal; }
+  .pbtn-x { grid-column: 4; grid-row: 1; align-self: start; }
+  .player-jumps { grid-column: 1 / -1; grid-row: 2; align-self: start; display: flex; flex-wrap: wrap; gap: 6px; }
+  .player-jumps a { display: inline-flex; align-items: center; min-height: 32px; padding: 0 11px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: .8125rem; font-weight: 700; text-decoration: none; }
+  .player-jumps a:hover { color: var(--ink); border-color: var(--ink); }
+  #player-speed { grid-column: 1; grid-row: 3; }
+  #player-loop { grid-column: 2; grid-row: 3; }
+}
+@media (min-width: 700px) and (min-height: 600px) { .player-frame { width: min(54vw, calc(34vh * 16 / 9)); } }  /* on a tall window, leave more room for the cards */
+
+@media (min-width: 1100px) {
+  /* The video leaves the reading column for a box on the right. --rail is its width:
+     whatever the window has left over once the column has its full 760px, between
+     340px and 600px, and never so tall that the controls under it leave the screen.
+     --col is the column's width and --edge the margin left on each side of the pair. */
+  :root {
+    --rail: min(clamp(340px, calc(100vw - 784px), 600px), calc((100vh - 220px) * 16 / 9));
+    --col: min(760px, calc(100vw - var(--rail) - 24px));
+    --edge: calc((100vw - var(--col) - var(--rail) - 8px) / 2);
+  }
+  :root.dock-open main { max-width: var(--col); margin-left: var(--edge); margin-right: 0; }
+  .player { position: fixed; top: 16px; right: var(--edge); width: var(--rail); max-height: calc(100vh - 32px); overflow: hidden auto; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 8px 28px rgb(0 0 0 / .2); }
+  .player-in { display: block; max-width: none; padding: 0; }
+  .player-frame { width: 100%; }
+  .player-bar { padding: 14px 12px 14px 16px; }
+}
 @media print { .player { display: none; } }
 """
 
@@ -578,6 +626,7 @@ PLAYER = f'''
     </div>
     <div class="player-bar">
       <p class="player-title" id="player-title" aria-live="polite"></p>
+      <nav class="player-jumps" aria-label="Jump to a section">{"".join(f'<a {moment(t, name)}>{escape(name)}</a>' for name, t in PARTS)}</nav>
       <button type="button" class="pbtn" id="player-speed">1×</button>
       <button type="button" class="pbtn" id="player-loop" aria-pressed="false" disabled>Loop from here</button>
       <button type="button" class="pbtn pbtn-x" id="player-close" aria-label="Close the video"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
@@ -589,13 +638,14 @@ PLAYER = f'''
 PLAYER_JS = r"""
 (function () {
   // Timestamp links are ordinary YouTube links. This turns a tap on one into "play
-  // that moment in the dock at the top". Nothing is requested from YouTube until the
-  // first tap, and if the player cannot load the links go back to being links.
+  // that moment in the video docked on this page". Nothing is requested from YouTube
+  // until the first tap, and if the player cannot load the links go back to being links.
   var VIDEO = '__VIDEO__';
   var dock = document.getElementById('player');
   // Opened from disk there is no referrer and YouTube refuses to embed, so do nothing.
   if (!dock || location.protocol === 'file:' || !Element.prototype.closest) return;
   var root = document.documentElement;
+  var page = document.querySelector('main');
   var titleEl = document.getElementById('player-title');
   var msgEl = document.getElementById('player-msg');
   var msgText = document.getElementById('player-msg-text');
@@ -616,12 +666,34 @@ PLAYER_JS = r"""
   function now() {
     try { return player.getCurrentTime() || 0; } catch (e) { return want; }
   }
-  function dockHeight() { return dock.hidden ? 0 : dock.getBoundingClientRect().height; }
-  function measure() { root.style.setProperty('--player-h', Math.round(dockHeight()) + 'px'); }
+  // The dock is a band across the top that pushes the page down or, in a wide
+  // window, a box fixed in the right margin that covers nothing at the top.
+  function bandHeight() {
+    if (dock.hidden || getComputedStyle(dock).position !== 'sticky') return 0;
+    return dock.getBoundingClientRect().height;
+  }
+  function measure() { root.style.setProperty('--player-h', Math.round(bandHeight()) + 'px'); }
   function scrollByY(dy, smooth) {
     if (!dy) return;
     try { window.scrollBy({ top: dy, left: 0, behavior: smooth && !calm ? 'smooth' : 'instant' }); }
     catch (e) { window.scrollBy(0, dy); }
+  }
+  // Something in the page that is on screen now, to hold steady while the layout changes.
+  function probe() {
+    var r = page.getBoundingClientRect();
+    var x = r.left + Math.min(120, r.width / 2);
+    for (var y = bandHeight() + 16; y < window.innerHeight; y += 40) {
+      var el = document.elementFromPoint(x, y);
+      if (el && el !== page && page.contains(el) && el.getBoundingClientRect().height < window.innerHeight) return el;
+    }
+    return page;
+  }
+  // Change the layout, then scroll so that `ref` is where it was on screen before.
+  function hold(ref, change) {
+    var before = ref.getBoundingClientRect().top;
+    change();
+    measure();
+    scrollByY(ref.getBoundingClientRect().top - before, false);
   }
   function say(text) {
     msgText.textContent = text;
@@ -631,25 +703,26 @@ PLAYER_JS = r"""
   function hush() { msgEl.hidden = true; }
 
   function openDock(origin) {
-    var anchor = origin ? (origin.closest('.chord, .part') || origin) : null;
-    var top = anchor ? anchor.getBoundingClientRect().top : null;
+    // A tap inside the dock itself (a section shortcut) has no card to bring into view.
+    var anchor = origin && !dock.contains(origin) ? (origin.closest('.chord, .part') || origin) : null;
     if (dock.hidden) {
-      dock.hidden = false;
-      measure();
-      scrollByY(dockHeight(), false);  // the dock took room at the top: keep the page where it was
+      hold(anchor || probe(), function () {  // the page is rearranged: keep it where it was
+        dock.hidden = false;
+        root.classList.add('dock-open');
+      });
     }
-    if (top !== null) {
-      var under = top - (dockHeight() + 8);
+    if (anchor) {
+      var under = anchor.getBoundingClientRect().top - (bandHeight() + 8);
       if (under < 0) scrollByY(under, true);  // bring the tapped card out from under the dock
     }
   }
   function closeDock() {
     loopOff();
     if (ready) { try { player.pauseVideo(); } catch (e) {} }
-    var h = dockHeight();
-    dock.hidden = true;
-    measure();
-    scrollByY(-h, false);
+    hold(probe(), function () {
+      dock.hidden = true;
+      root.classList.remove('dock-open');
+    });
   }
 
   function play(t, part) {
@@ -817,7 +890,7 @@ def page():
 <header class="top">
   <p class="eyebrow">Fingerstyle lesson notes</p>
   <h1>All The Small Things: {NUMBER_WORDS[n]} chord shapes</h1>
-  <p class="lede">The fretting-hand shapes for the intro, first verse, pre-chorus and chorus of a fingerstyle arrangement, worked out from Six String Fingerpicking's 18-minute lesson on the Blink-182 song. Tap any time on this page to play that moment of the lesson. The video stays at the top of the screen while you read.</p>
+  <p class="lede">The fretting-hand shapes for the intro, first verse, pre-chorus and chorus of a fingerstyle arrangement, worked out from Six String Fingerpicking's 18-minute lesson on the Blink-182 song. Tap any time on this page to play that moment of the lesson. The video stays on screen while you read.</p>
   <dl class="facts">
     <div><dt>Tuning</dt><dd>Standard. The lesson does not say so, but the frets it names only make these chords in standard tuning.</dd></div>
     <div><dt>Capo</dt><dd>None</dd></div>
@@ -830,22 +903,22 @@ def page():
   <h2 id="h-map">The song map</h2>
   <p>Every section is a four-bar unit. Tap a bar to jump to its shape.</p>
   <div class="part">
-    <div class="part-head"><h3>Intro</h3>{watch(96, "From", "Intro")}</div>
+    <div class="part-head"><h3>Intro</h3>{from_part("Intro")}</div>
     {chips(INTRO, {4: "G → F"})}
     <p class="note">Two quick chords lead in before bar 1: the G shape and then the F shape, hit on the low strings only. Bars 1 to 3 are strummed in steady eighth notes. Bar 4 starts on G, drops to muted strums and lands on F at the very end. The four bars are played twice.</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Verse</h3>{watch(284, "From", "Verse")}</div>
+    <div class="part-head"><h3>Verse</h3>{from_part("Verse")}</div>
     {chips(VERSE)}
     <p class="note">Played four times, sixteen bars in all. The chords never change. The tune on top does, from the ninth bar (7:04) and again in the last four (8:49).</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Pre-chorus</h3>{watch(706, "From", "Pre-chorus")}</div>
+    <div class="part-head"><h3>Pre-chorus</h3>{from_part("Pre-chorus")}</div>
     {chips(PRE)}
     <p class="note">Two bars of C, one of G, one of F. The G and F are fuller than the verse versions.</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Chorus</h3>{watch(823, "From", "Chorus")}</div>
+    <div class="part-head"><h3>Chorus</h3>{from_part("Chorus")}</div>
     {chips(CHORUS)}
     <p class="note">The same four bars as the pre-chorus, with a strummed feel, played twice. The lesson stops here: the instructor says another verse and a bridge follow, and that he teaches those on his website.</p>
   </div>
