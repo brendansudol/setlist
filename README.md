@@ -40,6 +40,12 @@ step to deploy. `your-song` and `all-the-small-things` each have their own
 code. The generator for `heart-of-life` was not kept, so that page is edited
 by hand.
 
+`all-the-small-things` also has a docked video player: tapping a timestamp
+plays that moment of the lesson at the top of the page, using YouTube's
+embedded player. It is a trial on that one page; on the other two the
+timestamps open YouTube. See
+[its write-up](all-the-small-things/README.md#the-docked-player).
+
 ## Adding a song
 
 1. Follow the pipeline in [your-song/README.md](your-song/README.md#process).

@@ -184,8 +184,16 @@ def used_in(cid):
 PLAY = '<svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg>'
 
 
-def watch(t, label="Watch at"):
-    return (f'<a class="watch" href="{yt(t)}">{PLAY}'
+def moment(t, part):
+    """Attributes for a timestamp link. It is an ordinary YouTube link; the
+    script at the bottom of the page plays it in the docked player instead,
+    and shows `part` as the name of what is playing."""
+    assert 0 <= t < VIDEO_LENGTH, f"timestamp outside the video: {t}"
+    return f'href="{yt(t)}" data-t="{t}" data-part="{escape(part, quote=True)}"'
+
+
+def watch(t, label="Watch at", part=None):
+    return (f'<a class="watch" {moment(t, part or label)}>{PLAY}'
             f'<span>{escape(label)} <b>{mmss(t)}</b></span></a>')
 
 
@@ -287,7 +295,7 @@ def card(ch):
   </div>
   <p class="tip">{escape(ch["tip"])}</p>
   <footer>
-    {watch(ch["t"])}
+    {watch(ch["t"], part=ch["name"])}
     <label class="got" for="got-{cid}"><input type="checkbox" id="got-{cid}" data-got="{cid}"> I can play this</label>
   </footer>
 </article>'''
@@ -457,7 +465,7 @@ header.top { display: grid; gap: 12px; }
 
 /* chord cards */
 .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(288px, 1fr)); gap: 14px; }
-.chord { background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--fam); border-radius: 8px; padding: 14px; display: grid; gap: 12px; align-content: start; scroll-margin-top: 12px; }
+.chord { background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--fam); border-radius: 8px; padding: 14px; display: grid; gap: 12px; align-content: start; scroll-margin-top: calc(var(--player-h, 0px) + 12px); /* a bar tapped in the song map lands below the open video */ }
 .chord header { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 2px; align-items: baseline; }
 .chord h3 { font-size: 2rem; font-weight: 800; }
 .meta { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: .8125rem; color: var(--muted); }
@@ -535,7 +543,226 @@ figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
 .steps { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; max-width: 62ch; }
 .source { font-size: .875rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 8px; }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+/* The docked lesson video. Hidden until a timestamp is tapped, then it sticks to the
+   top of the screen so the video and the diagram below it are visible together.
+   The script moves the page itself when the dock opens and closes, so the browser's
+   own scroll anchoring is turned off to stop the two corrections adding up. */
+html, body { overflow-anchor: none; }
+.player { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); box-shadow: 0 4px 16px rgb(0 0 0 / .14); }
+.player[hidden] { display: none; }
+.player-in { max-width: 760px; margin: 0 auto; }
+.player-frame { position: relative; width: min(100%, calc(42vh * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; background: #000; }
+@media (min-width: 700px) and (min-height: 600px) { .player-frame { width: min(100%, calc(34vh * 16 / 9)); } }  /* on a big screen, leave more room for the cards */
+.player-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.player-msg { position: absolute; inset: 0; z-index: 1; display: grid; place-content: center; justify-items: center; gap: 8px; padding: 16px; text-align: center; background: #000; color: #fff; font-size: .9375rem; }
+.player-msg[hidden] { display: none; }
+.player-msg a { color: #fff; font-weight: 700; }
+.player-bar { display: flex; align-items: center; gap: 8px; padding: 6px 8px 6px 14px; }
+.player-title { flex: 1 1 0; min-width: 0; font-weight: 700; font-size: .9375rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pbtn { flex: none; min-width: 44px; min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 99px; background: transparent; color: var(--ink); font: 700 .8125rem/1 var(--font-body); font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.pbtn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.pbtn:disabled { opacity: .45; cursor: default; }
+.pbtn:focus-visible { outline: 3px solid var(--power); outline-offset: 2px; }
+.pbtn-x { width: 40px; min-width: 40px; padding: 0; }
+.pbtn-x svg { display: block; width: 12px; height: 12px; margin: 0 auto; }
+@media print { .player { display: none; } }
 """
+
+PLAYER = f'''
+<aside class="player" id="player" aria-label="Lesson video" hidden>
+  <div class="player-in">
+    <div class="player-frame">
+      <div id="player-video"></div>
+      <div class="player-msg" id="player-msg" hidden><span id="player-msg-text"></span><a id="player-msg-link" href="https://youtu.be/{VIDEO_ID}">Open this part on YouTube</a></div>
+    </div>
+    <div class="player-bar">
+      <p class="player-title" id="player-title" aria-live="polite"></p>
+      <button type="button" class="pbtn" id="player-speed">1×</button>
+      <button type="button" class="pbtn" id="player-loop" aria-pressed="false" disabled>Loop from here</button>
+      <button type="button" class="pbtn pbtn-x" id="player-close" aria-label="Close the video"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </div>
+  </div>
+</aside>
+'''
+
+PLAYER_JS = r"""
+(function () {
+  // Timestamp links are ordinary YouTube links. This turns a tap on one into "play
+  // that moment in the dock at the top". Nothing is requested from YouTube until the
+  // first tap, and if the player cannot load the links go back to being links.
+  var VIDEO = '__VIDEO__';
+  var dock = document.getElementById('player');
+  // Opened from disk there is no referrer and YouTube refuses to embed, so do nothing.
+  if (!dock || location.protocol === 'file:' || !Element.prototype.closest) return;
+  var root = document.documentElement;
+  var titleEl = document.getElementById('player-title');
+  var msgEl = document.getElementById('player-msg');
+  var msgText = document.getElementById('player-msg-text');
+  var msgLink = document.getElementById('player-msg-link');
+  var speedBtn = document.getElementById('player-speed');
+  var loopBtn = document.getElementById('player-loop');
+  var closeBtn = document.getElementById('player-close');
+  var RATES = [1, 0.75, 0.5];
+  var player = null, ready = false, loading = false, dead = false;
+  var want = 0, rate = 1, loopA = null, loopB = null, loopTimer = null, slowTimer = null;
+  var calm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function mmss(t) {
+    t = Math.max(0, Math.floor(t));
+    var s = t % 60;
+    return Math.floor(t / 60) + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function now() {
+    try { return player.getCurrentTime() || 0; } catch (e) { return want; }
+  }
+  function dockHeight() { return dock.hidden ? 0 : dock.getBoundingClientRect().height; }
+  function measure() { root.style.setProperty('--player-h', Math.round(dockHeight()) + 'px'); }
+  function scrollByY(dy, smooth) {
+    if (!dy) return;
+    try { window.scrollBy({ top: dy, left: 0, behavior: smooth && !calm ? 'smooth' : 'instant' }); }
+    catch (e) { window.scrollBy(0, dy); }
+  }
+  function say(text) {
+    msgText.textContent = text;
+    msgLink.href = 'https://youtu.be/' + VIDEO + '?t=' + Math.floor(want);
+    msgEl.hidden = false;
+  }
+  function hush() { msgEl.hidden = true; }
+
+  function openDock(origin) {
+    var anchor = origin ? (origin.closest('.chord, .part') || origin) : null;
+    var top = anchor ? anchor.getBoundingClientRect().top : null;
+    if (dock.hidden) {
+      dock.hidden = false;
+      measure();
+      scrollByY(dockHeight(), false);  // the dock took room at the top: keep the page where it was
+    }
+    if (top !== null) {
+      var under = top - (dockHeight() + 8);
+      if (under < 0) scrollByY(under, true);  // bring the tapped card out from under the dock
+    }
+  }
+  function closeDock() {
+    loopOff();
+    if (ready) { try { player.pauseVideo(); } catch (e) {} }
+    var h = dockHeight();
+    dock.hidden = true;
+    measure();
+    scrollByY(-h, false);
+  }
+
+  function play(t, part) {
+    want = t;
+    titleEl.textContent = (part ? part + ' · ' : '') + mmss(t);
+    loopOff();
+    if (ready) { player.seekTo(t, true); player.playVideo(); }
+    else if (!loading) load();
+  }
+  function load() {
+    loading = true;
+    say('Loading the video…');
+    window.onYouTubeIframeAPIReady = build;
+    var s = document.createElement('script');
+    s.src = 'https://www.youtube.com/iframe_api';
+    s.onerror = giveUp;
+    document.head.appendChild(s);
+    slowTimer = setTimeout(function () {
+      if (!ready && !dead) say('The video is taking a while to load.');
+    }, 10000);
+  }
+  function build() {
+    player = new YT.Player('player-video', {
+      host: 'https://www.youtube-nocookie.com',
+      videoId: VIDEO,
+      playerVars: { start: Math.floor(want), autoplay: 1, playsinline: 1, rel: 0 },
+      events: {
+        onReady: function () {
+          ready = true;
+          clearTimeout(slowTimer);
+          hush();
+          loopBtn.disabled = false;
+          if (rate !== 1) player.setPlaybackRate(rate);
+          player.seekTo(want, true);
+          player.playVideo();
+        },
+        onError: giveUp,
+        onPlaybackRateChange: function (e) { rate = e.data; paintSpeed(); }
+      }
+    });
+  }
+  function giveUp() {
+    dead = true;  // from here on the timestamps open YouTube, as they do without this script
+    loopOff();
+    loopBtn.disabled = true;
+    clearTimeout(slowTimer);
+    say('The video could not be played here.');
+  }
+
+  function paintSpeed() {
+    speedBtn.textContent = rate + '×';
+    speedBtn.setAttribute('aria-label', 'Playback speed ' + rate + '×. Tap to change.');
+  }
+  speedBtn.addEventListener('click', function () {
+    rate = RATES[(RATES.indexOf(rate) + 1) % RATES.length];
+    paintSpeed();
+    if (ready) player.setPlaybackRate(rate);
+  });
+
+  // One button, three presses: mark the start, mark the end (the loop begins), stop.
+  function paintLoop() {
+    var on = loopB !== null;
+    loopBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (on) {
+      loopBtn.textContent = mmss(loopA) + '–' + mmss(loopB);
+      loopBtn.setAttribute('aria-label', 'Looping ' + mmss(loopA) + ' to ' + mmss(loopB) + '. Tap to stop.');
+    } else {
+      loopBtn.textContent = loopA !== null ? 'Loop to here' : 'Loop from here';
+      loopBtn.removeAttribute('aria-label');
+    }
+  }
+  function loopOff() {
+    loopA = loopB = null;
+    clearInterval(loopTimer);
+    loopTimer = null;
+    paintLoop();
+  }
+  function loopTick() {
+    if (!ready || loopB === null) return;
+    var t = now(), ended = false;
+    try { ended = player.getPlayerState() === 0; } catch (e) {}
+    if (ended || t >= loopB || t < loopA - 1) {
+      player.seekTo(loopA, true);
+      if (ended) player.playVideo();
+    }
+  }
+  loopBtn.addEventListener('click', function () {
+    if (!ready) return;
+    var t = now();
+    if (loopB !== null) { loopOff(); return; }
+    if (loopA === null) { loopA = t; paintLoop(); return; }
+    if (t < loopA) { loopB = loopA; loopA = t; } else { loopB = t; }
+    if (loopB - loopA < 2) loopB = loopA + 2;
+    paintLoop();
+    player.seekTo(loopA, true);
+    player.playVideo();
+    loopTimer = setInterval(loopTick, 200);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (dead || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    var a = e.target.closest('a[data-t]');
+    if (!a) return;
+    e.preventDefault();
+    openDock(a);
+    play(parseFloat(a.getAttribute('data-t')), a.getAttribute('data-part'));
+  });
+  closeBtn.addEventListener('click', closeDock);
+  window.addEventListener('resize', function () { if (!dock.hidden) measure(); });
+  paintSpeed();
+  paintLoop();
+})();
+""".replace("__VIDEO__", VIDEO_ID)
 
 JS = r"""
 (function () {
@@ -569,7 +796,7 @@ def page():
     n = len(CHORDS)
     cards = "".join(card(ch) for ch in CHORDS)
     chapters = "".join(
-        f'<li><a href="{yt(t)}"><span class="t">{mmss(t)}</span><span class="ct">{escape(title)}</span></a>'
+        f'<li><a {moment(t, title)}><span class="t">{mmss(t)}</span><span class="ct">{escape(title)}</span></a>'
         f'<span class="what">{escape(what)}</span></li>'
         for t, title, what in CHAPTERS)
     return f'''<!DOCTYPE html>
@@ -584,12 +811,13 @@ def page():
 <style>{CSS}</style>
 </head>
 <body>
+{PLAYER}
 <main>
 
 <header class="top">
   <p class="eyebrow">Fingerstyle lesson notes</p>
   <h1>All The Small Things: {NUMBER_WORDS[n]} chord shapes</h1>
-  <p class="lede">The fretting-hand shapes for the intro, first verse, pre-chorus and chorus of a fingerstyle arrangement, worked out from Six String Fingerpicking's 18-minute lesson on the Blink-182 song. Each shape links to the moment it appears in the video.</p>
+  <p class="lede">The fretting-hand shapes for the intro, first verse, pre-chorus and chorus of a fingerstyle arrangement, worked out from Six String Fingerpicking's 18-minute lesson on the Blink-182 song. Tap any time on this page to play that moment of the lesson. The video stays at the top of the screen while you read.</p>
   <dl class="facts">
     <div><dt>Tuning</dt><dd>Standard. The lesson does not say so, but the frets it names only make these chords in standard tuning.</dd></div>
     <div><dt>Capo</dt><dd>None</dd></div>
@@ -602,22 +830,22 @@ def page():
   <h2 id="h-map">The song map</h2>
   <p>Every section is a four-bar unit. Tap a bar to jump to its shape.</p>
   <div class="part">
-    <div class="part-head"><h3>Intro</h3>{watch(96, "From")}</div>
+    <div class="part-head"><h3>Intro</h3>{watch(96, "From", "Intro")}</div>
     {chips(INTRO, {4: "G → F"})}
     <p class="note">Two quick chords lead in before bar 1: the G shape and then the F shape, hit on the low strings only. Bars 1 to 3 are strummed in steady eighth notes. Bar 4 starts on G, drops to muted strums and lands on F at the very end. The four bars are played twice.</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Verse</h3>{watch(284, "From")}</div>
+    <div class="part-head"><h3>Verse</h3>{watch(284, "From", "Verse")}</div>
     {chips(VERSE)}
     <p class="note">Played four times, sixteen bars in all. The chords never change. The tune on top does, from the ninth bar (7:04) and again in the last four (8:49).</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Pre-chorus</h3>{watch(706, "From")}</div>
+    <div class="part-head"><h3>Pre-chorus</h3>{watch(706, "From", "Pre-chorus")}</div>
     {chips(PRE)}
     <p class="note">Two bars of C, one of G, one of F. The G and F are fuller than the verse versions.</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Chorus</h3>{watch(823, "From")}</div>
+    <div class="part-head"><h3>Chorus</h3>{watch(823, "From", "Chorus")}</div>
     {chips(CHORUS)}
     <p class="note">The same four bars as the pre-chorus, with a strummed feel, played twice. The lesson stops here: the instructor says another verse and a bridge follow, and that he teaches those on his website.</p>
   </div>
@@ -662,7 +890,7 @@ def page():
     <li>The intro is strummed, and the pre-chorus and chorus mix picking with light strums. Those are easier to watch than to read.</li>
     <li>The lesson names strings, not picking-hand fingers, so the diagram does not assign any.</li>
   </ul>
-  <div class="linkrow">{watch(303, "Verse figure at")} {watch(424, "Tune changes at")} {watch(610, "Verse, slowly, at")}</div>
+  <div class="linkrow">{watch(303, "Verse figure at", "Verse figure")} {watch(424, "Tune changes at", "Tune changes")} {watch(610, "Verse, slowly, at", "Verse, slowly")}</div>
 </section>
 
 <section aria-labelledby="h-order">
@@ -689,6 +917,7 @@ def page():
 
 </main>
 <script>{JS}</script>
+<script>{PLAYER_JS}</script>
 </body>
 </html>
 '''
