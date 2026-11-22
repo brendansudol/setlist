@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heart of Life Chord Shapes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;family=Bricolage+Grotesque:opsz,wght@12..96,600..800&amp;display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout: one reading column for a phone propped by the guitar. Chrome stays grey;
+     the only colour is the three hand-shape families, used the same way everywhere. */
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --ink: #16202b;
+  --muted: #566472;
+  --line: #d3dae1;
+  --major: #2459c4;   /* thumb-over major shape: D, G */
+  --minor: #a52d76;   /* thumb-over minor shape: Bm, F#m */
+  --open: #0c7a64;    /* open chords: D/F#, A */
+  --on-dot: #ffffff;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #10161d; --surface: #19212b; --ink: #e9eef3; --muted: #9aa8b6; --line: #2d3946;
+    --major: #86adff; --minor: #f090c8; --open: #5ad0b3; --on-dot: #10161d;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #10161d; --surface: #19212b; --ink: #e9eef3; --muted: #9aa8b6; --line: #2d3946;
+  --major: #86adff; --minor: #f090c8; --open: #5ad0b3; --on-dot: #10161d;
+}
+.fam-major { --fam: var(--major); }
+.fam-minor { --fam: var(--minor); }
+.fam-open  { --fam: var(--open); }
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 16px/1.5 var(--font-body);
+}
+main { max-width: 760px; margin: 0 auto; padding: 28px 16px 56px; display: grid; gap: 44px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(2rem, 8vw, 3rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; }
+p { margin: 0; max-width: 62ch; }
+a { color: inherit; }
+a:focus-visible, input:focus-visible { outline: 3px solid var(--major); outline-offset: 2px; border-radius: 4px; }
+section { display: grid; gap: 16px; }
+.lede { font-size: 1.0625rem; color: var(--muted); }
+.eyebrow { font-size: .8125rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+header.top { display: grid; gap: 12px; }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; margin: 4px 0 0; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.facts div { background: var(--surface); padding: 10px 12px; }
+.facts dt { font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.facts dd { margin: 2px 0 0; font-size: .9375rem; }
+
+/* the eight-bar loop */
+.loop { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+@media (min-width: 620px) { .loop { grid-template-columns: repeat(8, 1fr); } }
+.loop a { display: grid; gap: 2px; padding: 8px 8px 10px; text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-bottom: 5px solid var(--fam); border-radius: 6px; }
+.loop .bar { font-size: .6875rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.loop .nm { font: 700 1.25rem/1.1 var(--font-display); }
+
+/* shape families */
+.families { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.families li { display: grid; grid-template-columns: 14px 1fr; gap: 10px; align-items: start; }
+.families .sw { width: 14px; height: 14px; border-radius: 50%; background: var(--fam); margin-top: 5px; }
+.families strong { font-family: var(--font-display); }
+.readme { border-left: 3px solid var(--line); padding-left: 12px; color: var(--muted); font-size: .9375rem; }
+.readme b { color: var(--ink); }
+
+/* chord cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(288px, 1fr)); gap: 14px; }
+.chord { background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--fam); border-radius: 8px; padding: 14px; display: grid; gap: 12px; align-content: start; scroll-margin-top: 12px; }
+.chord header { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 2px; align-items: baseline; }
+.chord h3 { font-size: 2rem; font-weight: 800; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: .8125rem; color: var(--muted); }
+.tag { color: var(--fam); font-weight: 700; border: 1.5px solid var(--fam); border-radius: 99px; padding: 0 8px; line-height: 1.5; }
+.where { grid-column: 1 / -1; font-size: .9375rem; }
+.chord-body { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+.chordbox { width: 150px; height: auto; flex: 0 0 150px; display: block; }
+.fingers { flex: 1 1 120px; border-collapse: collapse; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.fingers th { text-align: left; font-size: .6875rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; padding: 0 6px 4px 0; }
+.fingers td { padding: 5px 6px 5px 0; border-top: 1px solid var(--line); }
+.fingers .num { text-align: right; padding-right: 0; font-weight: 700; }
+.tip { font-size: .9375rem; color: var(--muted); }
+.chord footer { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; justify-content: space-between; }
+.watch { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 6px 14px 6px 12px; border-radius: 99px; background: var(--ink); color: var(--bg); text-decoration: none; font-size: .875rem; }
+.watch .play { width: 11px; height: 11px; fill: currentColor; flex: none; }
+.watch b { font-variant-numeric: tabular-nums; }
+.got { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; font-size: .875rem; color: var(--muted); cursor: pointer; }
+.got input { width: 20px; height: 20px; accent-color: var(--fam); margin: 0; }
+.progress { font-size: .9375rem; color: var(--muted); }
+
+/* diagrams */
+svg text { font-family: var(--font-body); }
+.string { stroke: var(--ink); }
+.string-off { opacity: .28; }
+.fret { stroke: var(--ink); stroke-width: 1; opacity: .38; }
+.nut { stroke: var(--ink); stroke-width: 4; stroke-linecap: square; }
+.dot { fill: var(--fam); }
+.dot-under { opacity: .35; }
+.dot-t { fill: var(--surface); stroke: var(--fam); stroke-width: 2.5; }
+.dot-add { fill: var(--surface); stroke: var(--fam); stroke-width: 2.5; stroke-dasharray: 3.2 2.4; }
+.fn { fill: var(--on-dot); font-size: 10.5px; font-weight: 700; text-anchor: middle; }
+.ft { fill: var(--ink); }
+.startfret { fill: var(--ink); font-size: 11px; font-weight: 700; text-anchor: end; }
+.mk { fill: var(--muted); font-size: 13px; text-anchor: middle; }
+.openring { fill: none; stroke: var(--ink); stroke-width: 1.6; }
+.nn { fill: var(--muted); font-size: 10.5px; text-anchor: middle; }
+.nn-add { fill: var(--ink); font-weight: 700; }
+
+figure { margin: 0; display: grid; gap: 10px; }
+figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 12px; }
+.travel, .pick:not(.legend-ico) { display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto; }
+.board { fill: var(--ink); opacity: .07; }
+.travel .string { opacity: .5; }
+.travel .fret { opacity: .5; }
+.travel .nut { stroke-width: 3; }
+.grid { stroke: var(--ink); opacity: .1; }
+.inlay { fill: var(--ink); opacity: .35; }
+.fnum { fill: var(--muted); font-size: 9.5px; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.rowlab { fill: var(--ink); font-size: 11.5px; font-weight: 700; }
+.rowlab .ord { fill: var(--muted); font-weight: 400; }
+.span { fill: var(--fam); opacity: .85; }
+.travel .dot-t { stroke-width: 2; }
+.travel .fn { font-size: 8.5px; }
+
+.snare { fill: var(--ink); opacity: .07; }
+.snarelab { fill: var(--muted); font-size: 10px; text-anchor: middle; text-transform: uppercase; letter-spacing: .08em; }
+.beat { fill: var(--ink); font-size: 12px; font-weight: 700; text-anchor: middle; }
+.beat.off { fill: var(--muted); font-weight: 400; }
+.slab { fill: var(--muted); font-size: 11px; text-anchor: end; }
+.pick .string { opacity: .35; }
+.ev { fill: var(--surface); stroke: var(--ink); stroke-width: 1.6; }
+.ev-solid { fill: var(--ink); }
+.glyph { fill: none; stroke: var(--ink); stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.glyph-inv { stroke: var(--surface); }
+.legend { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px 16px; font-size: .9375rem; }
+.legend li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; align-items: center; }
+.legend-ico { width: 24px; height: 24px; display: block; }
+.points { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; max-width: 62ch; }
+.linkrow { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* pinky add-ons */
+.addons { display: grid; grid-template-columns: repeat(auto-fit, minmax(288px, 1fr)); gap: 14px; }
+.addon { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+.addon > div { flex: 1 1 120px; display: grid; gap: 8px; justify-items: start; }
+.addon h3 { font-size: 1.125rem; font-weight: 700; }
+.addon p { font-size: .9375rem; color: var(--muted); }
+
+/* chapter list */
+.chapters { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.chapters li { display: grid; gap: 2px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.chapters a { display: grid; grid-template-columns: 3.4em 1fr; gap: 8px; text-decoration: none; font-weight: 700; }
+.chapters .t { font-variant-numeric: tabular-nums; text-decoration: underline; text-underline-offset: 3px; }
+.chapters .what { padding-left: calc(3.4em + 8px); color: var(--muted); font-size: .9375rem; }
+.steps { margin: 0; padding-left: 1.4em; display: grid; gap: 8px; max-width: 62ch; }
+.source { font-size: .875rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 8px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+<main>
+
+<header class="top">
+  <p class="eyebrow">Fingerstyle lesson notes</p>
+  <h1>The Heart of Life: six chord shapes</h1>
+  <p class="lede">Everything your fretting hand needs for the intro and verse, worked out from Six String Fingerpicking's 12-minute lesson on the John Mayer song. Each shape links to the second it appears in the video.</p>
+  <dl class="facts">
+    <div><dt>Tuning</dt><dd>Standard in the lesson. The instructor notes the recording is tuned a half step lower.</dd></div>
+    <div><dt>Capo</dt><dd>None</dd></div>
+    <div><dt>To learn</dt><dd>6 chords built from 3 hand shapes</dd></div>
+    <div><dt>Loop</dt><dd>8 bars, used for both intro and verse</dd></div>
+  </dl>
+</header>
+
+<section aria-labelledby="h-loop">
+  <h2 id="h-loop">The eight-bar loop</h2>
+  <ol class="loop"><li class="fam-major"><a href="#chord-d"><span class="bar">bar 1</span><span class="nm">D</span></a></li><li class="fam-major"><a href="#chord-d"><span class="bar">bar 2</span><span class="nm">D</span></a></li><li class="fam-minor"><a href="#chord-bm"><span class="bar">bar 3</span><span class="nm">Bm</span></a></li><li class="fam-minor"><a href="#chord-bm"><span class="bar">bar 4</span><span class="nm">Bm</span></a></li><li class="fam-minor"><a href="#chord-fsharp-m"><span class="bar">bar 5</span><span class="nm">F#m</span></a></li><li class="fam-major"><a href="#chord-g"><span class="bar">bar 6</span><span class="nm">G</span></a></li><li class="fam-open"><a href="#chord-d-fsharp"><span class="bar">bar 7</span><span class="nm">D/F#</span></a></li><li class="fam-open"><a href="#chord-a"><span class="bar">bar 8</span><span class="nm">A</span></a></li></ol>
+  <p>D and Bm last two bars each. The last four chords get one bar apiece, so those are the quick changes to drill. Tap a bar to jump to its shape.</p>
+</section>
+
+<section aria-labelledby="h-fam">
+  <h2 id="h-fam">Three hand shapes cover all six chords</h2>
+  <ul class="families">
+    <li class="fam-major"><span class="sw"></span><span><strong>Major shape, thumb over the top.</strong> D with the thumb on fret 10, G with the thumb on fret 3. One hand shape, moved seven frets.</span></li>
+    <li class="fam-minor"><span class="sw"></span><span><strong>Minor shape, thumb over the top.</strong> Bm at fret 7, F#m at fret 2. One hand shape, moved five frets.</span></li>
+    <li class="fam-open"><span class="sw"></span><span><strong>Open chords.</strong> D/F# and A, down by the nut.</span></li>
+  </ul>
+  <p class="readme"><b>Reading the diagrams:</b> the left line is the low E string and the right line is the high E. <b>T</b> is your thumb, wrapped over the top of the neck. Numbers are fingers, 1 for index through 4 for pinky. <b>×</b> marks a string the picking pattern skips, a ring marks an open string, and the letters underneath are the notes that sound. Frets and strings are the ones called out in the lesson; the finger numbers are the usual fingering for each shape.</p>
+</section>
+
+<section aria-labelledby="h-shapes">
+  <h2 id="h-shapes">The shapes, in playing order</h2>
+  <p class="progress" id="progress" aria-live="polite">Tick each shape off as you get it clean.</p>
+  <div class="cards">
+<article class="chord fam-major" id="chord-d">
+  <header>
+    <h3>D</h3>
+    <p class="meta"><span class="tag">Major shape</span><span>2 bars</span></p>
+    <p class="where">The F chord shape, slid up to fret 10</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="D chord diagram: string 6 fret 10, string 4 fret 12, string 3 fret 11, string 2 fret 10"><line class="fret" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string string-off" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string string-off" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="startfret" x="22" y="64.0">10fr</text><text class="mk" x="54" y="35">×</text><text class="mk" x="134" y="35">×</text><circle class="dot-t" cx="34" cy="60.0" r="8.5"/><text class="fn ft" x="34" y="63.8">T</text><circle class="dot" cx="74" cy="124.0" r="8.5"/><text class="fn" x="74" y="127.8">3</text><circle class="dot" cx="94" cy="92.0" r="8.5"/><text class="fn" x="94" y="95.8">2</text><circle class="dot" cx="114" cy="60.0" r="8.5"/><text class="fn" x="114" y="63.8">1</text><text class="nn" x="34" y="191">D</text><text class="nn" x="74" y="191">D</text><text class="nn" x="94" y="191">F#</text><text class="nn" x="114" y="191">A</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Thumb</td><td>low E</td><td class='num'>10</td></tr><tr><td>Ring</td><td>D</td><td class='num'>12</td></tr><tr><td>Middle</td><td>G</td><td class='num'>11</td></tr><tr><td>Index</td><td>B</td><td class='num'>10</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">Getting the thumb over the top this far up the neck is the awkward part. Tilting the neck up a little gives it room.</p>
+  <footer>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=101"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>1:41</b></span></a>
+    <label class="got" for="got-d"><input type="checkbox" id="got-d" data-got="d"> I can play this</label>
+  </footer>
+</article>
+<article class="chord fam-minor" id="chord-bm">
+  <header>
+    <h3>Bm</h3>
+    <p class="meta"><span class="tag">Minor shape</span><span>2 bars</span></p>
+    <p class="where">Thumb drops to fret 7</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="Bm chord diagram: string 6 fret 7, string 4 fret 9, string 3 fret 7, string 2 fret 7"><line class="fret" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string string-off" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string string-off" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="startfret" x="22" y="64.0">7fr</text><text class="mk" x="54" y="35">×</text><text class="mk" x="134" y="35">×</text><rect class="dot" x="85.5" y="51.5" width="37" height="17" rx="8.5"/><text class="fn" x="104.0" y="63.8">1</text><circle class="dot-t" cx="34" cy="60.0" r="8.5"/><text class="fn ft" x="34" y="63.8">T</text><circle class="dot" cx="74" cy="124.0" r="8.5"/><text class="fn" x="74" y="127.8">3</text><text class="nn" x="34" y="191">B</text><text class="nn" x="74" y="191">B</text><text class="nn" x="114" y="191">F#</text><text class="nn" x="94" y="191">D</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Thumb</td><td>low E</td><td class='num'>7</td></tr><tr><td>Ring</td><td>D</td><td class='num'>9</td></tr><tr><td>Index</td><td>G, B</td><td class='num'>7</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">Lay the index finger flat so it holds both the G and B strings at fret 7.</p>
+  <footer>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=120"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:00</b></span></a>
+    <label class="got" for="got-bm"><input type="checkbox" id="got-bm" data-got="bm"> I can play this</label>
+  </footer>
+</article>
+<article class="chord fam-minor" id="chord-fsharp-m">
+  <header>
+    <h3>F#m</h3>
+    <p class="meta"><span class="tag">Minor shape</span><span>1 bar</span></p>
+    <p class="where">The Bm hand, moved down to fret 2</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="F#m chord diagram: string 6 fret 2, string 4 fret 4, string 3 fret 2, string 2 fret 2"><line class="fret" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string string-off" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string string-off" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="startfret" x="22" y="64.0">2fr</text><text class="mk" x="54" y="35">×</text><text class="mk" x="134" y="35">×</text><rect class="dot" x="85.5" y="51.5" width="37" height="17" rx="8.5"/><text class="fn" x="104.0" y="63.8">1</text><circle class="dot-t" cx="34" cy="60.0" r="8.5"/><text class="fn ft" x="34" y="63.8">T</text><circle class="dot" cx="74" cy="124.0" r="8.5"/><text class="fn" x="74" y="127.8">3</text><text class="nn" x="34" y="191">F#</text><text class="nn" x="74" y="191">F#</text><text class="nn" x="114" y="191">C#</text><text class="nn" x="94" y="191">A</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Thumb</td><td>low E</td><td class='num'>2</td></tr><tr><td>Ring</td><td>D</td><td class='num'>4</td></tr><tr><td>Index</td><td>G, B</td><td class='num'>2</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">Nothing changes in the hand. Keep the Bm shape locked and slide five frets toward the headstock.</p>
+  <footer>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=137"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:17</b></span></a>
+    <label class="got" for="got-fsharp-m"><input type="checkbox" id="got-fsharp-m" data-got="fsharp-m"> I can play this</label>
+  </footer>
+</article>
+<article class="chord fam-major" id="chord-g">
+  <header>
+    <h3>G</h3>
+    <p class="meta"><span class="tag">Major shape</span><span>1 bar</span></p>
+    <p class="where">The D hand again, thumb on fret 3</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="G chord diagram: string 6 fret 3, string 4 fret 5, string 3 fret 4, string 2 fret 3"><line class="fret" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string string-off" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string string-off" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="startfret" x="22" y="64.0">3fr</text><text class="mk" x="54" y="35">×</text><text class="mk" x="134" y="35">×</text><circle class="dot-t" cx="34" cy="60.0" r="8.5"/><text class="fn ft" x="34" y="63.8">T</text><circle class="dot" cx="74" cy="124.0" r="8.5"/><text class="fn" x="74" y="127.8">3</text><circle class="dot" cx="94" cy="92.0" r="8.5"/><text class="fn" x="94" y="95.8">2</text><circle class="dot" cx="114" cy="60.0" r="8.5"/><text class="fn" x="114" y="63.8">1</text><text class="nn" x="34" y="191">G</text><text class="nn" x="74" y="191">G</text><text class="nn" x="94" y="191">B</text><text class="nn" x="114" y="191">D</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Thumb</td><td>low E</td><td class='num'>3</td></tr><tr><td>Ring</td><td>D</td><td class='num'>5</td></tr><tr><td>Middle</td><td>G</td><td class='num'>4</td></tr><tr><td>Index</td><td>B</td><td class='num'>3</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">Same fingers as the opening D. Only the thumb&#x27;s fret tells you which chord it is.</p>
+  <footer>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=144"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:24</b></span></a>
+    <label class="got" for="got-g"><input type="checkbox" id="got-g" data-got="g"> I can play this</label>
+  </footer>
+</article>
+<article class="chord fam-open" id="chord-d-fsharp">
+  <header>
+    <h3>D/F#</h3>
+    <p class="meta"><span class="tag">Open chord</span><span>1 bar</span></p>
+    <p class="where">Ordinary open D, plus the thumb</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="D/F# chord diagram: string 6 fret 2, string 4 open, string 3 fret 2, string 2 fret 3, string 1 fret 2"><line class="nut" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string string-off" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="mk" x="54" y="35">×</text><circle class="openring" cx="74" cy="30" r="4.5"/><circle class="dot-t" cx="34" cy="92.0" r="8.5"/><text class="fn ft" x="34" y="95.8">T</text><circle class="dot" cx="94" cy="92.0" r="8.5"/><text class="fn" x="94" y="95.8">1</text><circle class="dot" cx="114" cy="124.0" r="8.5"/><text class="fn" x="114" y="127.8">3</text><circle class="dot" cx="134" cy="92.0" r="8.5"/><text class="fn" x="134" y="95.8">2</text><text class="nn" x="34" y="191">F#</text><text class="nn" x="94" y="191">A</text><text class="nn" x="114" y="191">D</text><text class="nn" x="134" y="191">F#</text><text class="nn" x="74" y="191">D</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Thumb</td><td>low E</td><td class='num'>2</td></tr><tr><td>Index</td><td>G</td><td class='num'>2</td></tr><tr><td>Ring</td><td>B</td><td class='num'>3</td></tr><tr><td>Middle</td><td>high E</td><td class='num'>2</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">Your thumb stays on the same fret it held for F#m, two chords earlier.</p>
+  <footer>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=150"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:30</b></span></a>
+    <label class="got" for="got-d-fsharp"><input type="checkbox" id="got-d-fsharp" data-got="d-fsharp"> I can play this</label>
+  </footer>
+</article>
+<article class="chord fam-open" id="chord-a">
+  <header>
+    <h3>A</h3>
+    <p class="meta"><span class="tag">Open chord</span><span>1 bar</span></p>
+    <p class="where">Regular open A</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="A chord diagram: string 5 open, string 4 fret 2, string 3 fret 2, string 2 fret 2"><line class="nut" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string string-off" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string string-off" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="mk" x="34" y="35">×</text><text class="mk" x="134" y="35">×</text><circle class="openring" cx="54" cy="30" r="4.5"/><rect class="dot" x="65.5" y="83.5" width="57" height="17" rx="8.5"/><text class="fn" x="94.0" y="95.8">1</text><text class="nn" x="114" y="191">C#</text><text class="nn" x="94" y="191">A</text><text class="nn" x="74" y="191">E</text><text class="nn" x="54" y="191">A</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Index</td><td>D, G, B</td><td class='num'>2</td></tr><tr><td>Open</td><td>A</td><td class='num'>0</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">The instructor flattens one finger across all three strings, and says any A fingering you already use is fine. This is the only chord with its bass on the A string.</p>
+  <footer>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=158"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>2:38</b></span></a>
+    <label class="got" for="got-a"><input type="checkbox" id="got-a" data-got="a"> I can play this</label>
+  </footer>
+</article></div>
+</section>
+
+<section aria-labelledby="h-travel">
+  <h2 id="h-travel">How far the hand travels</h2>
+  <figure>
+    <div class="panel"><svg class="travel" viewBox="0 0 340 214" role="img" aria-label="Chart of where the fretting hand sits for each chord: D frets 10 to 12, B minor 7 to 9, F sharp minor 2 to 4, G 3 to 5, D over F sharp 2 to 3, A fret 2."><rect class="board" x="54" y="14" width="282.0" height="36"/><line class="string" x1="54" y1="18.0" x2="336.0" y2="18.0" stroke-width="1.60"/><line class="string" x1="54" y1="23.6" x2="336.0" y2="23.6" stroke-width="1.46"/><line class="string" x1="54" y1="29.2" x2="336.0" y2="29.2" stroke-width="1.32"/><line class="string" x1="54" y1="34.8" x2="336.0" y2="34.8" stroke-width="1.18"/><line class="string" x1="54" y1="40.4" x2="336.0" y2="40.4" stroke-width="1.04"/><line class="string" x1="54" y1="46.0" x2="336.0" y2="46.0" stroke-width="0.90"/><line class="nut" x1="54" y1="14" x2="54" y2="50"/><line class="fret" x1="77.5" y1="14" x2="77.5" y2="50"/><line class="grid" x1="77.5" y1="70" x2="77.5" y2="208"/><text class="fnum" x="65.75" y="64">1</text><line class="fret" x1="101.0" y1="14" x2="101.0" y2="50"/><line class="grid" x1="101.0" y1="70" x2="101.0" y2="208"/><text class="fnum" x="89.25" y="64">2</text><line class="fret" x1="124.5" y1="14" x2="124.5" y2="50"/><line class="grid" x1="124.5" y1="70" x2="124.5" y2="208"/><text class="fnum" x="112.75" y="64">3</text><line class="fret" x1="148.0" y1="14" x2="148.0" y2="50"/><line class="grid" x1="148.0" y1="70" x2="148.0" y2="208"/><text class="fnum" x="136.25" y="64">4</text><line class="fret" x1="171.5" y1="14" x2="171.5" y2="50"/><line class="grid" x1="171.5" y1="70" x2="171.5" y2="208"/><text class="fnum" x="159.75" y="64">5</text><line class="fret" x1="195.0" y1="14" x2="195.0" y2="50"/><line class="grid" x1="195.0" y1="70" x2="195.0" y2="208"/><text class="fnum" x="183.25" y="64">6</text><line class="fret" x1="218.5" y1="14" x2="218.5" y2="50"/><line class="grid" x1="218.5" y1="70" x2="218.5" y2="208"/><text class="fnum" x="206.75" y="64">7</text><line class="fret" x1="242.0" y1="14" x2="242.0" y2="50"/><line class="grid" x1="242.0" y1="70" x2="242.0" y2="208"/><text class="fnum" x="230.25" y="64">8</text><line class="fret" x1="265.5" y1="14" x2="265.5" y2="50"/><line class="grid" x1="265.5" y1="70" x2="265.5" y2="208"/><text class="fnum" x="253.75" y="64">9</text><line class="fret" x1="289.0" y1="14" x2="289.0" y2="50"/><line class="grid" x1="289.0" y1="70" x2="289.0" y2="208"/><text class="fnum" x="277.25" y="64">10</text><line class="fret" x1="312.5" y1="14" x2="312.5" y2="50"/><line class="grid" x1="312.5" y1="70" x2="312.5" y2="208"/><text class="fnum" x="300.75" y="64">11</text><line class="fret" x1="336.0" y1="14" x2="336.0" y2="50"/><line class="grid" x1="336.0" y1="70" x2="336.0" y2="208"/><text class="fnum" x="324.25" y="64">12</text><line class="grid" x1="54" y1="70" x2="54" y2="208"/><circle class="inlay" cx="112.75" cy="32.0" r="2.6"/><circle class="inlay" cx="159.75" cy="32.0" r="2.6"/><circle class="inlay" cx="206.75" cy="32.0" r="2.6"/><circle class="inlay" cx="253.75" cy="32.0" r="2.6"/><circle class="inlay" cx="324.25" cy="25.0" r="2.6"/><circle class="inlay" cx="324.25" cy="39.0" r="2.6"/><g class="fam-major"><text class="rowlab" x="2" y="88"><tspan class="ord">1</tspan> D</text><rect class="span" x="267.5" y="76" width="66.5" height="16" rx="8"/><circle class="dot-t" cx="277.25" cy="84" r="6.5"/><text class="fn ft" x="277.25" y="87.4">T</text></g><g class="fam-minor"><text class="rowlab" x="2" y="111"><tspan class="ord">2</tspan> Bm</text><rect class="span" x="197.0" y="99" width="66.5" height="16" rx="8"/><circle class="dot-t" cx="206.75" cy="107" r="6.5"/><text class="fn ft" x="206.75" y="110.4">T</text></g><g class="fam-minor"><text class="rowlab" x="2" y="134"><tspan class="ord">3</tspan> F#m</text><rect class="span" x="79.5" y="122" width="66.5" height="16" rx="8"/><circle class="dot-t" cx="89.25" cy="130" r="6.5"/><text class="fn ft" x="89.25" y="133.4">T</text></g><g class="fam-major"><text class="rowlab" x="2" y="157"><tspan class="ord">4</tspan> G</text><rect class="span" x="103.0" y="145" width="66.5" height="16" rx="8"/><circle class="dot-t" cx="112.75" cy="153" r="6.5"/><text class="fn ft" x="112.75" y="156.4">T</text></g><g class="fam-open"><text class="rowlab" x="2" y="180"><tspan class="ord">5</tspan> D/F#</text><rect class="span" x="79.5" y="168" width="43.0" height="16" rx="8"/><circle class="dot-t" cx="89.25" cy="176" r="6.5"/><text class="fn ft" x="89.25" y="179.4">T</text></g><g class="fam-open"><text class="rowlab" x="2" y="203"><tspan class="ord">6</tspan> A</text><rect class="span" x="79.5" y="191" width="19.5" height="16" rx="8"/><circle class="openring" cx="47" cy="199" r="4.5"/></g></svg></div>
+    <figcaption>Each bar covers the frets your fingers occupy for that chord, top to bottom in playing order. T is the fret your thumb holds on the low E string. A takes its bass from the open A string instead. The big moves are D to Bm and Bm to F#m; after that the hand stays inside the first five frets.</figcaption>
+  </figure>
+</section>
+
+<section aria-labelledby="h-pinky">
+  <h2 id="h-pinky">Pinky notes for the second bar</h2>
+  <p>D and Bm each last two bars. In the second bar the lesson adds one pinky note on the B string while the rest of the shape stays down.</p>
+  <div class="addons">
+<article class="addon fam-major" id="d-pinky">
+  <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="D, second bar: the D shape with the pinky added on the B string at fret 12"><line class="fret" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string string-off" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string string-off" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="startfret" x="22" y="64.0">10fr</text><text class="mk" x="54" y="35">×</text><text class="mk" x="134" y="35">×</text><circle class="dot-t" cx="34" cy="60.0" r="8.5"/><text class="fn ft" x="34" y="63.8">T</text><circle class="dot" cx="74" cy="124.0" r="8.5"/><text class="fn" x="74" y="127.8">3</text><circle class="dot" cx="94" cy="92.0" r="8.5"/><text class="fn" x="94" y="95.8">2</text><circle class="dot dot-under" cx="114" cy="60.0" r="8.5"/><text class="fn" x="114" y="63.8">1</text><circle class="dot-add" cx="114" cy="124.0" r="9.5"/><text class="fn ft" x="114" y="127.8">4</text><text class="nn" x="34" y="191">D</text><text class="nn" x="74" y="191">D</text><text class="nn" x="94" y="191">F#</text><text class="nn nn-add" x="114" y="191">B</text></svg>
+  <div>
+    <h3>D, second bar</h3>
+    <p>Keep the whole D shape down and add your pinky on the B string at fret 12, two frets above the index.</p>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=305"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>5:05</b></span></a>
+  </div>
+</article>
+<article class="addon fam-minor" id="bm-pinky">
+  <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="Bm, second bar: the Bm shape with the pinky added on the B string at fret 10"><line class="fret" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string string-off" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string string-off" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="startfret" x="22" y="64.0">7fr</text><text class="mk" x="54" y="35">×</text><text class="mk" x="134" y="35">×</text><rect class="dot" x="85.5" y="51.5" width="37" height="17" rx="8.5"/><text class="fn" x="104.0" y="63.8">1</text><circle class="dot-t" cx="34" cy="60.0" r="8.5"/><text class="fn ft" x="34" y="63.8">T</text><circle class="dot" cx="74" cy="124.0" r="8.5"/><text class="fn" x="74" y="127.8">3</text><circle class="dot-add" cx="114" cy="156.0" r="9.5"/><text class="fn ft" x="114" y="159.8">4</text><text class="nn" x="34" y="191">B</text><text class="nn" x="74" y="191">B</text><text class="nn nn-add" x="114" y="191">A</text><text class="nn" x="94" y="191">D</text></svg>
+  <div>
+    <h3>Bm, second bar</h3>
+    <p>Same idea, but the pinky lands on fret 10. That is three frets above the index, one more than on D.</p>
+    <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=366"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Watch at <b>6:06</b></span></a>
+  </div>
+</article></div>
+</section>
+
+<section aria-labelledby="h-pick">
+  <h2 id="h-pick">What the picking hand does on top</h2>
+  <figure>
+    <div class="panel"><svg class="pick" viewBox="0 0 340 162" role="img" aria-label="One bar of the picking pattern. Beat 1: thumb and a finger pluck the bass and B strings together. Beat 2: thumb taps the bass string while the index flicks down on the G string. And of 2: finger plucks the B string. Beat 3: thumb plucks the bass. And of 3: finger plucks the D string. Beat 4: tap and flick again."><rect class="snare" x="118" y="24" width="32" height="118" rx="6"/><text class="snarelab" x="134" y="156">tap</text><rect class="snare" x="258" y="24" width="32" height="118" rx="6"/><text class="snarelab" x="274" y="156">tap</text><text class="beat" x="64" y="16">1</text><text class="beat off" x="99" y="16">&</text><text class="beat" x="134" y="16">2</text><text class="beat off" x="169" y="16">&</text><text class="beat" x="204" y="16">3</text><text class="beat off" x="239" y="16">&</text><text class="beat" x="274" y="16">4</text><text class="beat off" x="309" y="16">&</text><line class="string" x1="48" y1="44" x2="334" y2="44" stroke-width="1.2"/><text class="slab" x="42" y="48">B</text><line class="string" x1="48" y1="70" x2="334" y2="70" stroke-width="1.2"/><text class="slab" x="42" y="74">G</text><line class="string" x1="48" y1="96" x2="334" y2="96" stroke-width="1.2"/><text class="slab" x="42" y="100">D</text><line class="string" x1="48" y1="122" x2="334" y2="122" stroke-width="2"/><text class="slab" x="42" y="126">Bass</text><circle class="ev" cx="64" cy="44" r="10"/><path class="glyph" d="M64,49 V39 M60.4,42.8 L64,39 L67.6,42.8"/><circle class="ev" cx="64" cy="122" r="10"/><text class="fn ft" x="64" y="125.8">T</text><circle class="ev ev-solid" cx="134" cy="70" r="10"/><path class="glyph glyph-inv" d="M134,65 V75 M130.4,71.2 L134,75 L137.6,71.2"/><circle class="ev ev-solid" cx="134" cy="122" r="10"/><path class="glyph glyph-inv" d="M130.4,118.4 L137.6,125.6 M137.6,118.4 L130.4,125.6"/><circle class="ev" cx="169" cy="44" r="10"/><path class="glyph" d="M169,49 V39 M165.4,42.8 L169,39 L172.6,42.8"/><circle class="ev" cx="204" cy="122" r="10"/><text class="fn ft" x="204" y="125.8">T</text><circle class="ev" cx="239" cy="96" r="10"/><path class="glyph" d="M239,101 V91 M235.4,94.8 L239,91 L242.6,94.8"/><circle class="ev ev-solid" cx="274" cy="70" r="10"/><path class="glyph glyph-inv" d="M274,65 V75 M270.4,71.2 L274,75 L277.6,71.2"/><circle class="ev ev-solid" cx="274" cy="122" r="10"/><path class="glyph glyph-inv" d="M270.4,118.4 L277.6,125.6 M277.6,118.4 L270.4,125.6"/></svg></div>
+    <figcaption>One bar of the basic pattern, read left to right. The shaded beats, 2 and 4, are the percussive taps that stand in for a snare drum.</figcaption>
+  </figure>
+  <ul class="legend">
+    <li><svg class="pick legend-ico" viewBox="0 0 24 24" aria-hidden="true"><circle class="ev" cx="12" cy="12" r="10"/><text class="fn ft" x="12" y="15.8">T</text></svg><span>Thumb plucks the bass string</span></li>
+    <li><svg class="pick legend-ico" viewBox="0 0 24 24" aria-hidden="true"><circle class="ev" cx="12" cy="12" r="10"/><path class="glyph" d="M12,17 V7 M8.4,10.8 L12,7 L15.6,10.8"/></svg><span>A finger plucks upward</span></li>
+    <li><svg class="pick legend-ico" viewBox="0 0 24 24" aria-hidden="true"><circle class="ev ev-solid" cx="12" cy="12" r="10"/><path class="glyph glyph-inv" d="M8.4,8.4 L15.6,15.6 M15.6,8.4 L8.4,15.6"/></svg><span>Thumb taps the bass string, lightly</span></li>
+    <li><svg class="pick legend-ico" viewBox="0 0 24 24" aria-hidden="true"><circle class="ev ev-solid" cx="12" cy="12" r="10"/><path class="glyph glyph-inv" d="M12,7 V17 M8.4,13.2 L12,17 L15.6,13.2"/></svg><span>Index flicks down across the G string, together with the tap</span></li>
+  </ul>
+  <ul class="points">
+    <li>The pattern only touches four strings: the bass string, D, G and B. That is why the diagrams mark the others as skipped.</li>
+    <li>The bass string is the low E for every chord except A, where the thumb moves to the open A string.</li>
+    <li>In the second bar of D and Bm the pattern thins out to pinch, tap, pinch, tap, with the pinky note in the second pinch.</li>
+    <li>The lesson finishes with a short second-guitar melody on the B and high E strings. That part is easier to watch than to read.</li>
+  </ul>
+  <div class="linkrow"><a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=191"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Pattern at <b>3:11</b></span></a> <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=470"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>A chord at <b>7:50</b></span></a> <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=508"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Full loop at <b>8:28</b></span></a> <a class="watch" href="https://youtu.be/dgEQvqHTQbw?t=525"><svg class="play" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5v9l7.5-4.5z"/></svg><span>Melody at <b>8:45</b></span></a></div>
+</section>
+
+<section aria-labelledby="h-order">
+  <h2 id="h-order">A practice order</h2>
+  <ol class="steps">
+    <li>Hold the D shape at fret 10 and pluck the four strings one at a time until each rings.</li>
+    <li>Slide that same hand down to fret 3 for G, then back. Repeat until you land without looking.</li>
+    <li>Do the same with the minor shape: Bm at fret 7, F#m at fret 2.</li>
+    <li>Loop the last four bars on their own: F#m, G, D/F#, A. These changes come fastest.</li>
+    <li>Add the picking pattern on D alone, then run the whole loop slowly.</li>
+  </ol>
+</section>
+
+<section aria-labelledby="h-map">
+  <h2 id="h-map">Find it in the video</h2>
+  <ol class="chapters"><li><a href="https://youtu.be/dgEQvqHTQbw?t=0"><span class="t">0:00</span><span class="ct">Introduction</span></a><span class="what">The intro played through at speed.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=68"><span class="t">1:08</span><span class="ct">Chord progression</span></a><span class="what">The tuning note, then all six shapes one at a time.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=191"><span class="t">3:11</span><span class="ct">Basic picking pattern</span></a><span class="what">The one-bar pattern, built up slowly on the D shape.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=305"><span class="t">5:05</span><span class="ct">Pattern variations</span></a><span class="what">Bar two of D, with the pinky note.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=365"><span class="t">6:05</span><span class="ct">Chord specific picking</span></a><span class="what">The pinky note on Bm, then a bar each of F#m, G, D/F# and A.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=525"><span class="t">8:45</span><span class="ct">Melodic embellishments</span></a><span class="what">The second-guitar melody over D and Bm.</span></li><li><a href="https://youtu.be/dgEQvqHTQbw?t=684"><span class="t">11:24</span><span class="ct">Conclusion</span></a><span class="what">How the verse reuses the intro.</span></li></ol>
+</section>
+
+<footer class="source">
+  <p>Source: <a href="https://youtu.be/dgEQvqHTQbw">The Heart of Life (John Mayer) Guitar Lesson</a> by Six String Fingerpicking on YouTube. The video teaches the intro and verse; the instructor links the full lesson and TAB in its description.</p>
+  <p>The diagrams were drawn for these notes and are not frames from the video. Follow the timestamps to see the real hand positions.</p>
+</footer>
+
+</main>
+<script>
+(function () {
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input[data-got]'));
+  var out = document.getElementById('progress');
+  var KEY = 'heart-of-life-shapes';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  function render() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    out.textContent = n === 0 ? 'Tick each shape off as you get it clean.'
+      : n === boxes.length ? 'All ' + n + ' shapes ticked off. Time for the picking pattern.'
+      : n + ' of ' + boxes.length + ' shapes ticked off.';
+  }
+  boxes.forEach(function (b) {
+    b.checked = !!saved[b.getAttribute('data-got')];
+    b.addEventListener('change', function () {
+      saved[b.getAttribute('data-got')] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      render();
+    });
+  });
+  render();
+})();
+</script>
+</body>
+</html>
