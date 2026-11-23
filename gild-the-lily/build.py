@@ -150,6 +150,12 @@ BRIDGE = [("fsharp-m", 2), ("c", 2, "am"), ("d", 4),
           ("d", 2), ("fsharp7", 2, "fsharp-m"), ("c", 4), ("d", 4)]
 SECTIONS = [("verse", VERSE), ("chorus", CHORUS), ("bridge", BRIDGE)]
 
+# The seven slow bars before the intro lick, from a different lesson (B-RoM's).
+# Only the chord of each bar is here; the notes are on the practice sheet in
+# pre-intro/, which has its own generator. Kept out of SECTIONS so the chord
+# cards go on listing only the sections this page's own lesson teaches.
+PRE_INTRO = [("d", 4), ("am", 4), ("g", 4), ("d", 4), ("d", 4), ("am", 4), ("d", 4)]
+
 # (seconds, the chapter title YouTube shows, what happens in it), per part
 CHAPTERS = {
     1: [
@@ -284,7 +290,7 @@ def check():
             assert ch["frets"][a] == fret and ch["frets"][b] == fret, f"{n}: barre ends"
             assert all(ch["fingers"][i] == fg for i in range(a, b + 1)
                        if ch["frets"][i] == fret), f"{n}: barre finger mismatch"
-    for name, seq in SECTIONS:
+    for name, seq in SECTIONS + [("pre-intro", PRE_INTRO)]:
         beat = 0
         for cid, beats, *other in seq:
             assert cid in C or cid == "walk", f"unknown chord in the {name}: {cid}"
@@ -308,6 +314,12 @@ def check():
         assert all(letter in letters for letter, _ in lick_pass["segs"]), lick_pass["name"]
     for pattern in (STRUM_VERSE, STRUM_CHORUS):
         assert len(pattern) == 16 and set(pattern) <= set("Ddu."), "a strumming bar is sixteen slots"
+
+
+def sheet_link(label):
+    """A button to the pre-intro practice sheet. Not a timestamp, so the docked
+    player leaves it alone and it opens like any other link."""
+    return f'<a class="watch" href="pre-intro/"><span>{escape(label)} <b>&rarr;</b></span></a>'
 
 
 def used_in(cid):
@@ -1081,8 +1093,13 @@ def page():
   <h2 id="h-map">The song map</h2>
   <p>Four beats to the bar. A narrow box is two beats and a wide box is a whole bar. Tap a box to jump to its shape. Where a box says “or”, the sources disagree, and the note under that section says how.</p>
   <div class="part">
+    <div class="part-head"><h3>Pre-intro</h3>{sheet_link("Tab and player")}</div>
+    {chips(PRE_INTRO)}
+    <p class="note">Seven slow bars before the lick, one chord to the bar, each picked a string at a time. They come from B-RoM's lesson, not the one the rest of this page follows. The <a href="pre-intro/">practice sheet</a> has every note as tab, with the count under it and a player that loops any bar at any tempo.</p>
+  </div>
+  <div class="part">
     <div class="part-head"><h3>Intro lick</h3>{from_part("Intro lick")}</div>
-    <p class="note">A single-note lick that comes round four times, each a little different. It is <a href="#h-lick">mapped pass by pass further down</a>. The slow bars another lesson plays before it have <a href="pre-intro/">their own practice sheet</a>.</p>
+    <p class="note">A single-note lick that comes round four times, each a little different. It is <a href="#h-lick">mapped pass by pass further down</a>.</p>
   </div>
   <div class="part">
     <div class="part-head"><h3>Verse</h3>{from_part("Verse")}</div>

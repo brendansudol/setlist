@@ -84,8 +84,10 @@ A later request added [`pre-intro/`](pre-intro/): seven slow bars that a
 different lesson, B-RoM's, plays before the intro lick, redrawn as tab with a
 player that loops them at any tempo. That sheet does write its notes out,
 because the site's owner asked for it, and
-[its own write-up](pre-intro/README.md) says how it was made. Everything
-below is about the main page, which still does not.
+[its own write-up](pre-intro/README.md) says how it was made. On the main page
+it is the first row of the song map, as seven chord boxes with a button to
+the sheet, and the lick section links to it as well. Everything below is
+about the main page, which still writes no notes out.
 
 ## Process
 
