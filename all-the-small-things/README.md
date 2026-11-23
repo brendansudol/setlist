@@ -212,10 +212,16 @@ Same layout, type and colour rule as the other songs. What is specific here:
 Every timestamp on the page is an ordinary link to YouTube. A script at the
 bottom of the page turns a tap on one into "play that moment here".
 
-All three songs have this player. Its styles, markup and script are the same
-text in this `build.py`, in `your-song/build.py` and pasted into
-`heart-of-life/index.html`; only the video, the shortcuts and the name of one
-colour differ. A change to the player has to be made in all three.
+Every song has this player. Its styles, markup and script are the same text
+in this `build.py`, in `your-song/build.py`, in `gild-the-lily/build.py` and
+pasted into `heart-of-life/index.html`; only the videos, the shortcuts and
+the name of one colour differ. A change to the player has to be made in all
+four.
+
+The script can also switch videos, which only
+[Gild the Lily](../gild-the-lily/README.md) needs: its lesson is in two
+parts, so each of its timestamp links names its video, and the player loads
+that one if another is showing. The chosen speed carries over.
 
 - **One player, which stays on screen.** It appears on the first tap and stays
   put while the page scrolls, so the video and a diagram are visible together.

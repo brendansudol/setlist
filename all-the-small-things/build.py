@@ -640,7 +640,8 @@ PLAYER_JS = r"""
   // Timestamp links are ordinary YouTube links. This turns a tap on one into "play
   // that moment in the video docked on this page". Nothing is requested from YouTube
   // until the first tap, and if the player cannot load the links go back to being links.
-  var VIDEO = '__VIDEO__';
+  var VIDEO = '__VIDEO__';   // the page's lesson video
+  var LABELS = __LABELS__;   // {video id: "Part 1", ...} on a page whose lesson is split across videos
   var dock = document.getElementById('player');
   // Opened from disk there is no referrer and YouTube refuses to embed, so do nothing.
   if (!dock || location.protocol === 'file:' || !Element.prototype.closest) return;
@@ -655,7 +656,8 @@ PLAYER_JS = r"""
   var closeBtn = document.getElementById('player-close');
   var RATES = [1, 0.75, 0.5];
   var player = null, ready = false, loading = false, dead = false;
-  var want = 0, rate = 1, loopA = null, loopB = null, loopTimer = null, slowTimer = null;
+  var want = 0, wantVid = VIDEO, curVid = null, switching = false;
+  var rate = 1, loopA = null, loopB = null, loopTimer = null, slowTimer = null;
   var calm = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   function mmss(t) {
@@ -697,7 +699,7 @@ PLAYER_JS = r"""
   }
   function say(text) {
     msgText.textContent = text;
-    msgLink.href = 'https://youtu.be/' + VIDEO + '?t=' + Math.floor(want);
+    msgLink.href = 'https://youtu.be/' + wantVid + '?t=' + Math.floor(want);
     msgEl.hidden = false;
   }
   function hush() { msgEl.hidden = true; }
@@ -725,12 +727,24 @@ PLAYER_JS = r"""
     });
   }
 
-  function play(t, part) {
+  function play(t, part, vid) {
     want = t;
-    titleEl.textContent = (part ? part + ' · ' : '') + mmss(t);
+    wantVid = vid || VIDEO;
+    titleEl.textContent = (part ? part + ' · ' : '') + (LABELS[wantVid] ? LABELS[wantVid] + ', ' : '') + mmss(t);
     loopOff();
-    if (ready) { player.seekTo(t, true); player.playVideo(); }
+    if (ready) show();
     else if (!loading) load();
+  }
+  // Play `want` in `wantVid`, loading that video first if a different one is in the player.
+  function show() {
+    if (wantVid !== curVid) {
+      curVid = wantVid;
+      switching = true;  // a newly loaded video may reset the speed: put it back once it plays
+      player.loadVideoById({ videoId: wantVid, startSeconds: want });
+    } else {
+      player.seekTo(want, true);
+      player.playVideo();
+    }
   }
   function load() {
     loading = true;
@@ -745,9 +759,10 @@ PLAYER_JS = r"""
     }, 10000);
   }
   function build() {
+    curVid = wantVid;
     player = new YT.Player('player-video', {
       host: 'https://www.youtube-nocookie.com',
-      videoId: VIDEO,
+      videoId: curVid,
       playerVars: { start: Math.floor(want), autoplay: 1, playsinline: 1, rel: 0 },
       events: {
         onReady: function () {
@@ -756,11 +771,15 @@ PLAYER_JS = r"""
           hush();
           loopBtn.disabled = false;
           if (rate !== 1) player.setPlaybackRate(rate);
-          player.seekTo(want, true);
-          player.playVideo();
+          show();
         },
         onError: giveUp,
-        onPlaybackRateChange: function (e) { rate = e.data; paintSpeed(); }
+        onStateChange: function (e) {
+          if (e.data !== 1 || !switching) return;
+          switching = false;
+          if (player.getPlaybackRate() !== rate) player.setPlaybackRate(rate);
+        },
+        onPlaybackRateChange: function (e) { if (!switching) { rate = e.data; paintSpeed(); } }
       }
     });
   }
@@ -828,14 +847,14 @@ PLAYER_JS = r"""
     if (!a) return;
     e.preventDefault();
     openDock(a);
-    play(parseFloat(a.getAttribute('data-t')), a.getAttribute('data-part'));
+    play(parseFloat(a.getAttribute('data-t')), a.getAttribute('data-part'), a.getAttribute('data-v'));
   });
   closeBtn.addEventListener('click', closeDock);
   window.addEventListener('resize', function () { if (!dock.hidden) measure(); });
   paintSpeed();
   paintLoop();
 })();
-""".replace("__VIDEO__", VIDEO_ID)
+""".replace("__VIDEO__", VIDEO_ID).replace("__LABELS__", "{}")
 
 JS = r"""
 (function () {
