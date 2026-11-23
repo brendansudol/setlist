@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Danny's Song Lesson Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;family=Bricolage+Grotesque:opsz,wght@12..96,600..800&amp;display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout: one reading column for a phone propped by the guitar. Chrome stays grey;
+     the only colour is the three shape families, used the same way everywhere. */
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --ink: #16202b;
+  --muted: #566472;
+  --line: #d3dae1;
+  --open: #0c7a64;    /* open chords: D, C, E, A, G */
+  --barre: #2459c4;   /* the one barre chord: Bm */
+  --slash: #96560a;   /* D over a moving bass note: D/C#, D/A */
+  --on-dot: #ffffff;
+  --font-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Helvetica Neue", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #10161d; --surface: #19212b; --ink: #e9eef3; --muted: #9aa8b6; --line: #2d3946;
+    --open: #5ad0b3; --barre: #86adff; --slash: #f0b566; --on-dot: #10161d;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #10161d; --surface: #19212b; --ink: #e9eef3; --muted: #9aa8b6; --line: #2d3946;
+  --open: #5ad0b3; --barre: #86adff; --slash: #f0b566; --on-dot: #10161d;
+}
+.fam-open  { --fam: var(--open); }
+.fam-barre { --fam: var(--barre); }
+.fam-slash { --fam: var(--slash); }
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 16px/1.5 var(--font-body);
+}
+main { max-width: 760px; margin: 0 auto; padding: 28px 16px 56px; display: grid; gap: 44px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(2rem, 8vw, 3rem); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.01em; scroll-margin-top: 12px; }
+p { margin: 0; max-width: 62ch; }
+a { color: inherit; }
+a:focus-visible, input:focus-visible { outline: 3px solid var(--barre); outline-offset: 2px; border-radius: 4px; }
+section { display: grid; gap: 16px; }
+.lede { font-size: 1.0625rem; color: var(--muted); }
+.eyebrow { font-size: .8125rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+header.top { display: grid; gap: 12px; }
+
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; margin: 4px 0 0; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.facts div { background: var(--surface); padding: 10px 12px; }
+.facts dt { font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.facts dd { margin: 2px 0 0; font-size: .9375rem; }
+
+/* the chord map */
+.part { display: grid; gap: 10px; }
+.part-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; justify-content: space-between; }
+.part-head h3 { font-size: 1.125rem; font-weight: 700; }
+.loop { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+@media (min-width: 620px) { .loop { grid-template-columns: repeat(8, 1fr); } }
+.loop a { display: grid; gap: 2px; padding: 8px 6px 10px 8px; text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-bottom: 5px solid var(--fam); border-radius: 6px; }
+.loop .bar { font-size: .6875rem; letter-spacing: .06em; color: var(--muted); font-variant-numeric: tabular-nums; }
+.loop .nm { font: 700 1.125rem/1.1 var(--font-display); }
+.loop .whole { grid-column: span 2; }  /* a chord that lasts the whole bar */
+.loop .two { font-size: .9375rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 5px; }  /* two chords, a beat each */
+.loop .two i { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); align-self: center; }
+.note { font-size: .9375rem; color: var(--muted); }
+
+/* shape families */
+.families { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.families li { display: grid; grid-template-columns: 14px 1fr; gap: 10px; align-items: start; }
+.families .sw { width: 14px; height: 14px; border-radius: 50%; background: var(--fam); margin-top: 5px; }
+.families strong { font-family: var(--font-display); }
+.readme { border-left: 3px solid var(--line); padding-left: 12px; color: var(--muted); font-size: .9375rem; }
+.readme b { color: var(--ink); }
+
+/* chord cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(288px, 1fr)); gap: 14px; }
+.chord { background: var(--surface); border: 1px solid var(--line); border-top: 6px solid var(--fam); border-radius: 8px; padding: 14px; display: grid; gap: 12px; align-content: start; scroll-margin-top: 12px; }
+.chord header { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; row-gap: 2px; align-items: baseline; }
+.chord h3 { font-size: 2rem; font-weight: 800; }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: .8125rem; color: var(--muted); }
+.tag { color: var(--fam); font-weight: 700; border: 1.5px solid var(--fam); border-radius: 99px; padding: 0 8px; line-height: 1.5; white-space: nowrap; }
+.where { grid-column: 1 / -1; font-size: .9375rem; }
+.chord-body { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; }
+.chordbox { width: 150px; height: auto; flex: 0 0 150px; display: block; }
+.fingers { flex: 1 1 120px; border-collapse: collapse; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.fingers th { text-align: left; font-size: .6875rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; padding: 0 6px 4px 0; }
+.fingers td { padding: 5px 6px 5px 0; border-top: 1px solid var(--line); }
+.fingers .num { text-align: right; padding-right: 0; font-weight: 700; }
+.tip { font-size: .9375rem; color: var(--muted); }
+.chord footer { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; justify-content: space-between; }
+.when { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 4px 13px 4px 10px; border: 1px solid var(--line); border-radius: 99px; background: var(--surface); color: var(--ink); font-size: .875rem; }
+.when .clock { width: 12px; height: 12px; flex: none; fill: none; stroke: var(--muted); stroke-width: 1.3; stroke-linecap: round; }
+.when b { font-variant-numeric: tabular-nums; }
+.got { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; font-size: .875rem; color: var(--muted); cursor: pointer; }
+.got input { width: 20px; height: 20px; accent-color: var(--fam); margin: 0; }
+.progress { font-size: .9375rem; color: var(--muted); }
+
+/* diagrams */
+svg text { font-family: var(--font-body); }
+.string { stroke: var(--ink); }
+.string-off { opacity: .28; }
+.fret { stroke: var(--ink); stroke-width: 1; opacity: .38; }
+.nut { stroke: var(--ink); stroke-width: 4; stroke-linecap: square; }
+.dot { fill: var(--fam); }
+.dot-t { fill: var(--surface); stroke: var(--fam); stroke-width: 2.5; }
+.fn { fill: var(--on-dot); font-size: 10.5px; font-weight: 700; text-anchor: middle; }
+.ft { fill: var(--ink); }
+.startfret { fill: var(--ink); font-size: 11px; font-weight: 700; text-anchor: end; }
+.nutlab { fill: var(--muted); font-size: 8.5px; text-anchor: middle; letter-spacing: .04em; }
+.mk { fill: var(--muted); font-size: 13px; text-anchor: middle; }
+.openring { fill: none; stroke: var(--ink); stroke-width: 1.6; }
+.nn { fill: var(--muted); font-size: 10.5px; text-anchor: middle; }
+
+/* figures: the picking pattern and the two strums */
+figure { margin: 0; display: grid; gap: 10px; }
+figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 10px; }
+.groove, .pick { display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto; }
+.pick .string { opacity: .35; }
+.stroke { fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: .6; }
+.stroke-wide { stroke-width: 3.2; opacity: 1; }
+.thumbdot, .notedot { fill: var(--ink); }
+.thumblet { fill: var(--bg); font-size: 9.5px; font-weight: 700; text-anchor: middle; }
+.fingerdot { fill: var(--surface); stroke: var(--ink); stroke-width: 1.6; }
+.fingerlet { fill: var(--ink); font-size: 10px; font-weight: 700; font-style: italic; text-anchor: middle; }
+.count { fill: var(--muted); font-size: 10px; text-anchor: middle; }
+.count-beat { fill: var(--ink); font-size: 11.5px; font-weight: 700; }
+.groove-ch { fill: var(--ink); font-family: var(--font-display); font-size: 13px; font-weight: 700; }
+.beatline { stroke: var(--ink); opacity: .1; }
+.barline { stroke: var(--ink); opacity: .22; }
+.slab { fill: var(--muted); font-size: 9px; text-anchor: end; }
+.key { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px 16px; font-size: .9375rem; }
+.key li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; align-items: start; }
+.key-ico { width: 24px; height: 24px; display: block; }
+.bass { border-collapse: collapse; font-size: .9375rem; }
+.bass th { text-align: left; font-size: .6875rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; padding: 0 18px 4px 0; }
+.bass td { padding: 6px 18px 6px 0; border-top: 1px solid var(--line); vertical-align: top; }
+.videos { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.videos li { background: var(--surface); padding: 10px 12px; display: grid; gap: 2px; }
+.videos b { font-family: var(--font-display); }
+.videos span { font-size: .9375rem; color: var(--muted); }
+.videos code { font-size: .8125rem; color: var(--muted); overflow-wrap: anywhere; }
+.contents { display: grid; gap: 8px; }
+.contents h3 { font-size: 1.125rem; font-weight: 700; }
+.contents h3 span { font: 400 .9375rem/1 var(--font-body); color: var(--muted); margin-left: 6px; font-variant-numeric: tabular-nums; }
+.chapters .row { display: grid; grid-template-columns: 3.4em 1fr; gap: 8px; }
+.chapters .row .t { font-weight: 700; text-decoration: none; }
+.linkrow { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.points { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; max-width: 62ch; }
+
+
+/* chapter list */
+.chapters { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.chapters li { display: grid; gap: 2px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.chapters a { display: grid; grid-template-columns: 3.4em 1fr; gap: 8px; text-decoration: none; font-weight: 700; }
+.chapters .t { font-variant-numeric: tabular-nums; text-decoration: underline; text-underline-offset: 3px; }
+.chapters .what { padding-left: calc(3.4em + 8px); color: var(--muted); font-size: .9375rem; }
+.steps { margin: 0; padding-left: 1.9em; display: grid; gap: 8px; max-width: 62ch; }
+.source { font-size: .875rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 8px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+</head>
+<body>
+<main>
+
+<header class="top">
+  <p class="eyebrow">Guitar lesson notes</p>
+  <h1>Danny's Song: a Travis pick, a strum, eight shapes</h1>
+  <p class="lede">The guitar part to the Loggins &amp; Messina song as Jerry's Guitar Bar teaches it: Travis picking for the first two verses and choruses, an optional strummed version for the last two, and the chords under both. The lesson is a paid download, so this page cannot play it. Every time is written out for you to find in your own copy.</p>
+  <dl class="facts">
+    <div><dt>Key</dt><dd>D, in standard tuning. The lesson names the key but not the tuning; the chord shapes are the ordinary open ones.</dd></div>
+    <div><dt>Capo</dt><dd>None</dd></div>
+    <div><dt>Tempo</dt><dd>71 beats a minute, from the lesson's tab</dd></div>
+    <div><dt>Counted in</dt><dd>Sixteenth notes: “1 e &amp; a”, four to the beat</dd></div>
+  </dl>
+</header>
+
+<section aria-labelledby="h-videos">
+  <h2 id="h-videos">The three videos</h2>
+  <p>Times on this page name one of these and how far in to go. The file names are the ones in the lesson download.</p>
+  <ul class="videos"><li><b>Play-through <span>· 4:20</span></b><span>The whole arrangement, played and sung.</span><code>01_dannys_song_playthru.mp4</code></li><li><b>Part 1 <span>· 14:41</span></b><span>Verses and choruses 1 and 2: the Travis-picked part, bar by bar.</span><code>02_dannys_song_part_1_lesson.mp4</code></li><li><b>Part 2 <span>· 10:58</span></b><span>Verses and choruses 3 and 4: the strummed version, then the outro.</span><code>03_dannys_song_part_2_lesson.mp4</code></li></ul>
+</section>
+
+<section aria-labelledby="h-map">
+  <h2 id="h-map">How the song is built</h2>
+  <p>Four beats to the bar. A narrow box is two beats and a wide box is a whole bar. A box with two names has two chords, one beat each. Tap a box to jump to its shape; a box with two names goes to the less familiar one.</p>
+  <div class="part">
+    <div class="part-head"><h3>Intro</h3><span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 1 at <b>0:11</b></span></span></div>
+    <ol class="loop"><li class="fam-open whole"><a href="#chord-d"><span class="bar">bar 1</span><span class="nm">D</span></a></li></ol>
+    <p class="note">One bar of the picking pattern on D.</p>
+  </div>
+  <div class="part">
+    <div class="part-head"><h3>Verse</h3><span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 1 at <b>1:00</b></span></span></div>
+    <ol class="loop"><li class="fam-open"><a href="#chord-d"><span class="bar">bar 1</span><span class="nm">D</span></a></li><li class="fam-open"><a href="#chord-c"><span class="bar">beat 3</span><span class="nm">C</span></a></li><li class="fam-barre whole"><a href="#chord-bm"><span class="bar">bar 2</span><span class="nm">Bm</span></a></li><li class="fam-open whole"><a href="#chord-e"><span class="bar">bar 3</span><span class="nm">E</span></a></li><li class="fam-open whole"><a href="#chord-a"><span class="bar">bar 4</span><span class="nm">A</span></a></li></ol>
+    <p class="note">These four bars are played twice to make a verse, eight bars in all.</p>
+  </div>
+  <div class="part">
+    <div class="part-head"><h3>Chorus</h3><span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 1 at <b>6:49</b></span></span></div>
+    <ol class="loop"><li class="fam-open"><a href="#chord-g"><span class="bar">bar 1</span><span class="nm">G</span></a></li><li class="fam-open"><a href="#chord-a"><span class="bar">beat 3</span><span class="nm">A</span></a></li><li class="fam-slash"><a href="#chord-d-csharp"><span class="bar">bar 2</span><span class="nm two">D<i></i>D/C#</span></a></li><li class="fam-slash"><a href="#chord-d-a"><span class="bar">beat 3</span><span class="nm two">Bm<i></i>D/A</span></a></li><li class="fam-open"><a href="#chord-g"><span class="bar">bar 3</span><span class="nm">G</span></a></li><li class="fam-open"><a href="#chord-a"><span class="bar">beat 3</span><span class="nm">A</span></a></li><li class="fam-slash"><a href="#chord-d-csharp"><span class="bar">bar 4</span><span class="nm two">D<i></i>D/C#</span></a></li><li class="fam-barre"><a href="#chord-bm"><span class="bar">beat 3</span><span class="nm">Bm</span></a></li><li class="fam-open"><a href="#chord-g"><span class="bar">bar 5</span><span class="nm">G</span></a></li><li class="fam-open"><a href="#chord-a"><span class="bar">beat 3</span><span class="nm">A</span></a></li><li class="fam-open"><a href="#chord-d"><span class="bar">bar 6</span><span class="nm">D</span></a></li><li class="fam-open"><a href="#chord-c"><span class="bar">beat 3</span><span class="nm">C</span></a></li><li class="fam-barre"><a href="#chord-bm"><span class="bar">bar 7</span><span class="nm">Bm</span></a></li><li class="fam-open"><a href="#chord-e"><span class="bar">beat 3</span><span class="nm">E</span></a></li><li class="fam-open whole"><a href="#chord-a"><span class="bar">bar 8</span><span class="nm">A</span></a></li></ol>
+    <p class="note">Eight bars. In bar 2 the bass walks down under the D chord, a beat at a time: the open D string, then the A string at fret 4, at fret 2 and open. The instructor says to make sure you can hear it. Bar 4 starts the same walk and stops on Bm. The last bar is an A struck once and left to ring, then three bass notes climbing the A string back to D.</p>
+  </div>
+  <div class="part">
+    <div class="part-head"><h3>Outro</h3><span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 2 at <b>9:04</b></span></span></div>
+    <ol class="loop"><li class="fam-open"><a href="#chord-d"><span class="bar">bar 1</span><span class="nm">D</span></a></li><li class="fam-open"><a href="#chord-c"><span class="bar">beat 3</span><span class="nm">C</span></a></li><li class="fam-barre whole"><a href="#chord-bm"><span class="bar">bar 2</span><span class="nm">Bm</span></a></li><li class="fam-open"><a href="#chord-e"><span class="bar">bar 3</span><span class="nm">E</span></a></li><li class="fam-open"><a href="#chord-a"><span class="bar">beat 3</span><span class="nm">A</span></a></li><li class="fam-open whole"><a href="#chord-d"><span class="bar">bar 4</span><span class="nm">D</span></a></li></ol>
+    <p class="note">The verse line, shortened so that E and A share a bar, with a firm last strum on D. The lesson's chord sheet gives E and A a bar each here; this follows the tab and what the instructor plays.</p>
+  </div>
+</section>
+
+<section aria-labelledby="h-order">
+  <h2 id="h-order">The whole song, in order</h2>
+  <ol class="steps">
+    <li>Intro.</li>
+    <li>Verse 1 and chorus 1, picked.</li>
+    <li>Verse 2 and chorus 2, picked the same way.</li>
+    <li>Verse 3 and chorus 3, strummed.</li>
+    <li>Verse 4 and chorus 4, strummed the same way.</li>
+    <li>The four verse bars once more, with no singing.</li>
+    <li>Outro.</li>
+  </ol>
+  <p class="note">The strummed half is the instructor's own idea, for variety. He says the guitar on the record keeps picking all the way through while other instruments join in, and that playing all four verses the picked way is just as good.</p>
+  <div class="linkrow"><span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Picking it all: part 1 at <b>13:43</b></span></span> <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>The ending: part 2 at <b>8:28</b></span></span></div>
+</section>
+
+<section aria-labelledby="h-pick">
+  <h2 id="h-pick">The Travis pick</h2>
+  <p>The first half of the song is one small pattern, kept going while the chords change under it. The thumb plays two strings in turn, steadily, and a finger plays in each gap.</p>
+  <figure>
+    <div class="panel"><svg class="pick" viewBox="0 0 360 124" role="img" aria-label="One bar of the picking pattern on a D chord, in sixteenth notes. Each beat: thumb on the D string, index on the B string, thumb on the G string, middle on the high E string."><line class="beatline" x1="131.1" y1="12" x2="131.1" y2="116"/><line class="beatline" x1="205.5" y1="12" x2="205.5" y2="116"/><line class="beatline" x1="279.9" y1="12" x2="279.9" y2="116"/><line class="string" x1="54" y1="24" x2="357.0" y2="24" stroke-width="1.2"/><text class="slab" x="48" y="27.3">high E</text><line class="string" x1="54" y1="44" x2="357.0" y2="44" stroke-width="1.2"/><text class="slab" x="48" y="47.3">B</text><line class="string" x1="54" y1="64" x2="357.0" y2="64" stroke-width="1.2"/><text class="slab" x="48" y="67.3">G</text><line class="string" x1="54" y1="84" x2="357.0" y2="84" stroke-width="1.2"/><text class="slab" x="48" y="87.3">D</text><circle class="thumbdot" cx="66.0" cy="84" r="7.5"/><text class="thumblet" x="66.0" y="87.4">T</text><text class="count count-beat" x="66.0" y="112">1</text><circle class="fingerdot" cx="84.6" cy="44" r="7.5"/><text class="fingerlet" x="84.6" y="47.4">i</text><text class="count" x="84.6" y="112">e</text><circle class="thumbdot" cx="103.2" cy="64" r="7.5"/><text class="thumblet" x="103.2" y="67.4">T</text><text class="count" x="103.2" y="112">&amp;</text><circle class="fingerdot" cx="121.8" cy="24" r="7.5"/><text class="fingerlet" x="121.8" y="27.4">m</text><text class="count" x="121.8" y="112">a</text><circle class="thumbdot" cx="140.4" cy="84" r="7.5"/><text class="thumblet" x="140.4" y="87.4">T</text><text class="count count-beat" x="140.4" y="112">2</text><circle class="fingerdot" cx="159.0" cy="44" r="7.5"/><text class="fingerlet" x="159.0" y="47.4">i</text><text class="count" x="159.0" y="112">e</text><circle class="thumbdot" cx="177.6" cy="64" r="7.5"/><text class="thumblet" x="177.6" y="67.4">T</text><text class="count" x="177.6" y="112">&amp;</text><circle class="fingerdot" cx="196.2" cy="24" r="7.5"/><text class="fingerlet" x="196.2" y="27.4">m</text><text class="count" x="196.2" y="112">a</text><circle class="thumbdot" cx="214.8" cy="84" r="7.5"/><text class="thumblet" x="214.8" y="87.4">T</text><text class="count count-beat" x="214.8" y="112">3</text><circle class="fingerdot" cx="233.4" cy="44" r="7.5"/><text class="fingerlet" x="233.4" y="47.4">i</text><text class="count" x="233.4" y="112">e</text><circle class="thumbdot" cx="252.0" cy="64" r="7.5"/><text class="thumblet" x="252.0" y="67.4">T</text><text class="count" x="252.0" y="112">&amp;</text><circle class="fingerdot" cx="270.6" cy="24" r="7.5"/><text class="fingerlet" x="270.6" y="27.4">m</text><text class="count" x="270.6" y="112">a</text><circle class="thumbdot" cx="289.2" cy="84" r="7.5"/><text class="thumblet" x="289.2" y="87.4">T</text><text class="count count-beat" x="289.2" y="112">4</text><circle class="fingerdot" cx="307.8" cy="44" r="7.5"/><text class="fingerlet" x="307.8" y="47.4">i</text><text class="count" x="307.8" y="112">e</text><circle class="thumbdot" cx="326.4" cy="64" r="7.5"/><text class="thumblet" x="326.4" y="67.4">T</text><text class="count" x="326.4" y="112">&amp;</text><circle class="fingerdot" cx="345.0" cy="24" r="7.5"/><text class="fingerlet" x="345.0" y="27.4">m</text><text class="count" x="345.0" y="112">a</text></svg></div>
+    <figcaption>The intro: one bar on a D chord. <b>T</b> is the thumb, which goes D string, G string, D string, G string without a break. <b>i</b> is the index finger on the B string and <b>m</b> the middle finger on the high E string. The instructor calls the strings out by number: 4, 2, 3, 1.</figcaption>
+  </figure>
+  <ul class="points">
+    <li>Get the thumb even first. The instructor wants it to go like a metronome.</li>
+    <li>D only has four strings, so the thumb takes the D and G strings and the fingers take the top two. On every other chord the thumb drops down a string or two and the fingers move over to follow it.</li>
+    <li>The thumb's first string is the chord's root: the A string for C, Bm and A, the low E string for E and G.</li>
+    <li>Changes come a touch early. The last note before a new chord is often an open string, and he tends to land on D before its bar begins.</li>
+    <li>Some bars open with the bass note and a light brush down with the backs of the fingernails in place of the first two picked notes. It happens on D in the second line of the verse, and on G and D in the chorus.</li>
+    <li>In the third bar of the chorus the thumb swaps its second string, going to the G string on both G and A.</li>
+    <li>The top string picked is not always the same from one pass to the next. The instructor says it does not matter: any pattern you have already played on those chords will work.</li>
+  </ul>
+  <div class="linkrow"><span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>The thumb: part 1 at <b>0:25</b></span></span> <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Which finger: part 1 at <b>1:25</b></span></span> <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>The brush: part 1 at <b>4:43</b></span></span> <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>The thumb swaps: part 1 at <b>9:02</b></span></span> <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>The ringing A: part 1 at <b>12:55</b></span></span></div>
+</section>
+
+<section aria-labelledby="h-strum">
+  <h2 id="h-strum">The strum</h2>
+  <p>From verse 3 the chords stay the same and only the playing hand changes: the thumb still plays bass notes, and the fingers brush the strings instead of picking them. The lesson uses two shapes and treats them as interchangeable. The instructor's words are not to worry about exactly what the tab says on any of these bars.</p>
+  <ul class="key"><li><svg class="key-ico" viewBox="0 0 24 24" aria-hidden="true"><circle class="thumbdot" cx="12" cy="12" r="8.5"/><text class="thumblet" x="12" y="15.4">T</text></svg><span><b>Thumb</b> on one of the chord's two bass strings.</span></li><li><svg class="key-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="stroke stroke-wide" d="M12 3V21M7 16L12 21L17 16"/></svg><span><b>Down:</b> a light brush with the backs of the fingernails.</span></li><li><svg class="key-ico" viewBox="0 0 24 24" aria-hidden="true"><path class="stroke" d="M12 20V5M8 9L12 5L16 9"/></svg><span><b>Up:</b> a flick with the index finger that catches the top string or two.</span></li><li><svg class="key-ico" viewBox="0 0 24 24" aria-hidden="true"><circle class="notedot" cx="12" cy="12" r="4"/></svg><span><b>A picked note</b> on the G string. The instructor says an up strum does just as well.</span></li></ul>
+  <div class="part">
+    <div class="part-head"><h3>The sparser one</h3><span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 2 at <b>0:32</b></span></span></div>
+    <figure>
+      <div class="panel"><svg class="groove" viewBox="0 0 360 96" role="img" aria-label="One bar, D then C: thumb, down, thumb, picked note, down, up, on each chord."><line class="beatline" x1="98.1" y1="22" x2="98.1" y2="90"/><line class="barline" x1="180.5" y1="22" x2="180.5" y2="90"/><line class="beatline" x1="262.9" y1="22" x2="262.9" y2="90"/><text class="groove-ch" x="20.0" y="15">D</text><text class="groove-ch" x="184.8" y="15">C</text><circle class="thumbdot" cx="26.0" cy="46" r="7.5"/><text class="thumblet" x="26.0" y="49.4">T</text><text class="count count-beat" x="26.0" y="84">1</text><text class="count" x="46.6" y="84">e</text><path class="stroke stroke-wide" d="M67.2 28V64M61.7 58.5L67.2 64L72.7 58.5"/><text class="count" x="67.2" y="84">&amp;</text><text class="count" x="87.8" y="84">a</text><circle class="thumbdot" cx="108.4" cy="46" r="7.5"/><text class="thumblet" x="108.4" y="49.4">T</text><text class="count count-beat" x="108.4" y="84">2</text><circle class="notedot" cx="129.0" cy="46" r="3.6"/><text class="count" x="129.0" y="84">e</text><path class="stroke stroke-wide" d="M149.6 28V64M144.1 58.5L149.6 64L155.1 58.5"/><text class="count" x="149.6" y="84">&amp;</text><path class="stroke" d="M170.2 60V34M165.7 38.5L170.2 34L174.7 38.5"/><text class="count" x="170.2" y="84">a</text><circle class="thumbdot" cx="190.8" cy="46" r="7.5"/><text class="thumblet" x="190.8" y="49.4">T</text><text class="count count-beat" x="190.8" y="84">3</text><text class="count" x="211.4" y="84">e</text><path class="stroke stroke-wide" d="M232.0 28V64M226.5 58.5L232.0 64L237.5 58.5"/><text class="count" x="232.0" y="84">&amp;</text><text class="count" x="252.6" y="84">a</text><circle class="thumbdot" cx="273.2" cy="46" r="7.5"/><text class="thumblet" x="273.2" y="49.4">T</text><text class="count count-beat" x="273.2" y="84">4</text><circle class="notedot" cx="293.8" cy="46" r="3.6"/><text class="count" x="293.8" y="84">e</text><path class="stroke stroke-wide" d="M314.4 28V64M308.9 58.5L314.4 64L319.9 58.5"/><text class="count" x="314.4" y="84">&amp;</text><path class="stroke" d="M335.0 60V34M330.5 38.5L335.0 34L339.5 38.5"/><text class="count" x="335.0" y="84">a</text></svg></div>
+      <figcaption>A bar of D then C. On each chord: thumb, brush down, thumb on the other bass string, a picked note, down, up.</figcaption>
+    </figure>
+  </div>
+  <div class="part">
+    <div class="part-head"><h3>The busier one</h3><span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 2 at <b>1:43</b></span></span></div>
+    <figure>
+      <div class="panel"><svg class="groove" viewBox="0 0 360 96" role="img" aria-label="One bar of B minor: thumb, down, up, thumb, picked note, down, up, twice."><line class="beatline" x1="98.1" y1="22" x2="98.1" y2="90"/><line class="barline" x1="180.5" y1="22" x2="180.5" y2="90"/><line class="beatline" x1="262.9" y1="22" x2="262.9" y2="90"/><text class="groove-ch" x="20.0" y="15">Bm</text><circle class="thumbdot" cx="26.0" cy="46" r="7.5"/><text class="thumblet" x="26.0" y="49.4">T</text><text class="count count-beat" x="26.0" y="84">1</text><text class="count" x="46.6" y="84">e</text><path class="stroke stroke-wide" d="M67.2 28V64M61.7 58.5L67.2 64L72.7 58.5"/><text class="count" x="67.2" y="84">&amp;</text><path class="stroke" d="M87.8 60V34M83.3 38.5L87.8 34L92.3 38.5"/><text class="count" x="87.8" y="84">a</text><circle class="thumbdot" cx="108.4" cy="46" r="7.5"/><text class="thumblet" x="108.4" y="49.4">T</text><text class="count count-beat" x="108.4" y="84">2</text><circle class="notedot" cx="129.0" cy="46" r="3.6"/><text class="count" x="129.0" y="84">e</text><path class="stroke stroke-wide" d="M149.6 28V64M144.1 58.5L149.6 64L155.1 58.5"/><text class="count" x="149.6" y="84">&amp;</text><path class="stroke" d="M170.2 60V34M165.7 38.5L170.2 34L174.7 38.5"/><text class="count" x="170.2" y="84">a</text><circle class="thumbdot" cx="190.8" cy="46" r="7.5"/><text class="thumblet" x="190.8" y="49.4">T</text><text class="count count-beat" x="190.8" y="84">3</text><text class="count" x="211.4" y="84">e</text><path class="stroke stroke-wide" d="M232.0 28V64M226.5 58.5L232.0 64L237.5 58.5"/><text class="count" x="232.0" y="84">&amp;</text><path class="stroke" d="M252.6 60V34M248.1 38.5L252.6 34L257.1 38.5"/><text class="count" x="252.6" y="84">a</text><circle class="thumbdot" cx="273.2" cy="46" r="7.5"/><text class="thumblet" x="273.2" y="49.4">T</text><text class="count count-beat" x="273.2" y="84">4</text><circle class="notedot" cx="293.8" cy="46" r="3.6"/><text class="count" x="293.8" y="84">e</text><path class="stroke stroke-wide" d="M314.4 28V64M308.9 58.5L314.4 64L319.9 58.5"/><text class="count" x="314.4" y="84">&amp;</text><path class="stroke" d="M335.0 60V34M330.5 38.5L335.0 34L339.5 38.5"/><text class="count" x="335.0" y="84">a</text></svg></div>
+      <figcaption>A bar of Bm. The same thing with an extra up after the first brush.</figcaption>
+    </figure>
+  </div>
+  <div class="part">
+    <div class="part-head"><h3>Where the thumb goes</h3><span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>The two shapes: part 2 at <b>2:08</b></span></span></div>
+    <p>Each chord has two bass notes, one for each thumb stroke in the figures above.</p>
+    <table class="bass">
+      <thead><tr><th scope="col">Chord</th><th scope="col">First</th><th scope="col">Second</th></tr></thead>
+      <tbody>
+        <tr><td>D</td><td>D string</td><td>A string, open. For D/C# it is the A string at fret 4.</td></tr>
+        <tr><td>C</td><td>A string</td><td>Low E string at fret 3. The ring finger moves across.</td></tr>
+        <tr><td>Bm</td><td>A string</td><td>D string</td></tr>
+        <tr><td>E, G</td><td>Low E string</td><td>A string, hammered on from open to fret 2</td></tr>
+        <tr><td>A</td><td>A string</td><td>D string in the verse, the open low E string in the chorus</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Each A bar ends with the same climb up the A string as before, frets 2 and 4. After the first line of a verse it leads to D. At the end of the verse it leads to G instead, and the instructor says it still works.</p>
+    <div class="linkrow"><span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>The hammer-on: part 2 at <b>3:03</b></span></span> <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>A and the bass run: part 2 at <b>3:20</b></span></span></div>
+  </div>
+</section>
+
+<section aria-labelledby="h-fam">
+  <h2 id="h-fam">Three kinds of shape cover all eight</h2>
+  <ul class="families">
+    <li class="fam-open"><span class="sw"></span><span><strong>Open chords.</strong> D, C, E, A and G. The lesson assumes you know them.</span></li>
+    <li class="fam-barre"><span class="sw"></span><span><strong>Barre chord.</strong> Bm, at fret 2.</span></li>
+    <li class="fam-slash"><span class="sw"></span><span><strong>D over a moving bass.</strong> D/C# and D/A are the D chord with a different string under the thumb. They only last a beat each.</span></li>
+  </ul>
+  <p class="readme"><b>Reading the diagrams:</b> the left line is the low E string and the right line is the high E. The thick line at the top is the nut. Numbers are fingers, 1 for index through 4 for pinky, and a bar across several strings is one finger laid flat. <b>×</b> marks a string that is not part of the shape and a ring marks an open string. The letters underneath are the notes that sound. Frets and strings come from the lesson's tab and what the instructor says. He does not say which finger goes where on these chords, so the finger numbers are the usual fingering.</p>
+</section>
+
+<section aria-labelledby="h-shapes">
+  <h2 id="h-shapes">The shapes, in the order the song reaches them</h2>
+  <p class="progress" id="progress" aria-live="polite">Tick each shape off as you get it clean.</p>
+  <div class="cards">
+<article class="chord fam-open" id="chord-d">
+  <header>
+    <h3>D</h3>
+    <p class="meta"><span class="tag">Open chord</span><span>Intro, verse, chorus and outro</span></p>
+    <p class="where">Ordinary open D</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="D chord diagram: string 4 open, string 3 fret 2, string 2 fret 3, string 1 fret 2"><line class="nut" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string string-off" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string string-off" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="mk" x="34" y="35">×</text><text class="mk" x="54" y="35">×</text><circle class="openring" cx="74" cy="30" r="4.5"/><circle class="dot" cx="94" cy="92" r="8.5"/><text class="fn" x="94" y="95.8">1</text><circle class="dot" cx="114" cy="124" r="8.5"/><text class="fn" x="114" y="127.8">3</text><circle class="dot" cx="134" cy="92" r="8.5"/><text class="fn" x="134" y="95.8">2</text><text class="nn" x="74" y="191">D</text><text class="nn" x="94" y="191">A</text><text class="nn" x="114" y="191">D</text><text class="nn" x="134" y="191">F#</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Index</td><td>G</td><td class='num'>2</td></tr><tr><td>Ring</td><td>B</td><td class='num'>3</td></tr><tr><td>Middle</td><td>high E</td><td class='num'>2</td></tr><tr><td>Open</td><td>D</td><td class='num'>0</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">The home chord, and the one the picking pattern is taught on. It only has four strings, so the thumb works the D and G strings and the fingers take the top two. The instructor often lands on it a moment before its bar begins.</p>
+  <footer>
+    <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 1 at <b>0:11</b></span></span>
+    <label class="got" for="got-d"><input type="checkbox" id="got-d" data-got="d"> I can play this</label>
+  </footer>
+</article>
+<article class="chord fam-open" id="chord-c">
+  <header>
+    <h3>C</h3>
+    <p class="meta"><span class="tag">Open chord</span><span>Verse, chorus and outro</span></p>
+    <p class="where">Ordinary open C</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="C chord diagram: string 5 fret 3, string 4 fret 2, string 3 open, string 2 fret 1, string 1 open"><line class="nut" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string string-off" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="mk" x="34" y="35">×</text><circle class="openring" cx="94" cy="30" r="4.5"/><circle class="openring" cx="134" cy="30" r="4.5"/><circle class="dot" cx="54" cy="124" r="8.5"/><text class="fn" x="54" y="127.8">3</text><circle class="dot" cx="74" cy="92" r="8.5"/><text class="fn" x="74" y="95.8">2</text><circle class="dot" cx="114" cy="60" r="8.5"/><text class="fn" x="114" y="63.8">1</text><text class="nn" x="54" y="191">C</text><text class="nn" x="74" y="191">E</text><text class="nn" x="94" y="191">G</text><text class="nn" x="114" y="191">C</text><text class="nn" x="134" y="191">E</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Ring</td><td>A</td><td class='num'>3</td></tr><tr><td>Middle</td><td>D</td><td class='num'>2</td></tr><tr><td>Index</td><td>B</td><td class='num'>1</td></tr><tr><td>Open</td><td>G, high E</td><td class='num'>0</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">Two beats of it after D. The thumb drops to the A and D strings and each finger moves over one string. In the strummed version the second bass note is the low E string at fret 3, so the ring finger hops across to it.</p>
+  <footer>
+    <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 1 at <b>1:43</b></span></span>
+    <label class="got" for="got-c"><input type="checkbox" id="got-c" data-got="c"> I can play this</label>
+  </footer>
+</article>
+<article class="chord fam-barre" id="chord-bm">
+  <header>
+    <h3>Bm</h3>
+    <p class="meta"><span class="tag">Barre chord</span><span>Verse, chorus and outro</span></p>
+    <p class="where">Barre at fret 2, root on the A string</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="Bm chord diagram: string 5 fret 2, string 4 fret 4, string 3 fret 4, string 2 fret 3, string 1 fret 2"><line class="nut" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string string-off" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="mk" x="34" y="35">×</text><rect class="dot" x="45.5" y="83.5" width="97" height="17" rx="8.5"/><text class="fn" x="94.0" y="95.8">1</text><circle class="dot" cx="74" cy="156" r="8.5"/><text class="fn" x="74" y="159.8">3</text><circle class="dot" cx="94" cy="156" r="8.5"/><text class="fn" x="94" y="159.8">4</text><circle class="dot" cx="114" cy="124" r="8.5"/><text class="fn" x="114" y="127.8">2</text><text class="nn" x="54" y="191">B</text><text class="nn" x="74" y="191">F#</text><text class="nn" x="94" y="191">B</text><text class="nn" x="114" y="191">D</text><text class="nn" x="134" y="191">F#</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Index</td><td>barre, A to high E</td><td class='num'>2</td></tr><tr><td>Ring</td><td>D</td><td class='num'>4</td></tr><tr><td>Pinky</td><td>G</td><td class='num'>4</td></tr><tr><td>Middle</td><td>B</td><td class='num'>3</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">The only barre chord in the song, held for a whole bar in the verse. The thumb alternates between the A and D strings.</p>
+  <footer>
+    <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 1 at <b>2:30</b></span></span>
+    <label class="got" for="got-bm"><input type="checkbox" id="got-bm" data-got="bm"> I can play this</label>
+  </footer>
+</article>
+<article class="chord fam-open" id="chord-e">
+  <header>
+    <h3>E</h3>
+    <p class="meta"><span class="tag">Open chord</span><span>Verse, chorus and outro</span></p>
+    <p class="where">Ordinary open E</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="E chord diagram: string 6 open, string 5 fret 2, string 4 fret 2, string 3 fret 1, string 2 open, string 1 open"><line class="nut" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><circle class="openring" cx="34" cy="30" r="4.5"/><circle class="openring" cx="114" cy="30" r="4.5"/><circle class="openring" cx="134" cy="30" r="4.5"/><circle class="dot" cx="54" cy="92" r="8.5"/><text class="fn" x="54" y="95.8">2</text><circle class="dot" cx="74" cy="92" r="8.5"/><text class="fn" x="74" y="95.8">3</text><circle class="dot" cx="94" cy="60" r="8.5"/><text class="fn" x="94" y="63.8">1</text><text class="nn" x="34" y="191">E</text><text class="nn" x="54" y="191">B</text><text class="nn" x="74" y="191">E</text><text class="nn" x="94" y="191">G#</text><text class="nn" x="114" y="191">B</text><text class="nn" x="134" y="191">E</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Middle</td><td>A</td><td class='num'>2</td></tr><tr><td>Ring</td><td>D</td><td class='num'>2</td></tr><tr><td>Index</td><td>G</td><td class='num'>1</td></tr><tr><td>Open</td><td>low E, B, high E</td><td class='num'>0</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">A whole bar in the verse. The thumb alternates between the low E string and the D string. In the strummed version the second bass note is a hammer-on on the A string, from open to fret 2.</p>
+  <footer>
+    <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 1 at <b>2:55</b></span></span>
+    <label class="got" for="got-e"><input type="checkbox" id="got-e" data-got="e"> I can play this</label>
+  </footer>
+</article>
+<article class="chord fam-open" id="chord-a">
+  <header>
+    <h3>A</h3>
+    <p class="meta"><span class="tag">Open chord</span><span>Verse, chorus and outro</span></p>
+    <p class="where">Ordinary open A</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="A chord diagram: string 5 open, string 4 fret 2, string 3 fret 2, string 2 fret 2, string 1 open"><line class="nut" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string string-off" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="mk" x="34" y="35">×</text><circle class="openring" cx="54" cy="30" r="4.5"/><circle class="openring" cx="134" cy="30" r="4.5"/><circle class="dot" cx="74" cy="92" r="8.5"/><text class="fn" x="74" y="95.8">1</text><circle class="dot" cx="94" cy="92" r="8.5"/><text class="fn" x="94" y="95.8">2</text><circle class="dot" cx="114" cy="92" r="8.5"/><text class="fn" x="114" y="95.8">3</text><text class="nn" x="54" y="191">A</text><text class="nn" x="74" y="191">E</text><text class="nn" x="94" y="191">A</text><text class="nn" x="114" y="191">C#</text><text class="nn" x="134" y="191">E</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Index</td><td>D</td><td class='num'>2</td></tr><tr><td>Middle</td><td>G</td><td class='num'>2</td></tr><tr><td>Ring</td><td>B</td><td class='num'>2</td></tr><tr><td>Open</td><td>A, high E</td><td class='num'>0</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">The bar that leads back to D. The lesson has a note on the B string at fret 3 over it in places, which the instructor gets by forming the D chord early. At the end of each chorus it is struck once and left to ring before the bass run.</p>
+  <footer>
+    <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 1 at <b>3:42</b></span></span>
+    <label class="got" for="got-a"><input type="checkbox" id="got-a" data-got="a"> I can play this</label>
+  </footer>
+</article>
+<article class="chord fam-open" id="chord-g">
+  <header>
+    <h3>G</h3>
+    <p class="meta"><span class="tag">Open chord</span><span>Chorus</span></p>
+    <p class="where">Ordinary open G</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="G chord diagram: string 6 fret 3, string 5 fret 2, string 4 open, string 3 open, string 2 open, string 1 fret 3"><line class="nut" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><circle class="openring" cx="74" cy="30" r="4.5"/><circle class="openring" cx="94" cy="30" r="4.5"/><circle class="openring" cx="114" cy="30" r="4.5"/><circle class="dot" cx="34" cy="124" r="8.5"/><text class="fn" x="34" y="127.8">2</text><circle class="dot" cx="54" cy="92" r="8.5"/><text class="fn" x="54" y="95.8">1</text><circle class="dot" cx="134" cy="124" r="8.5"/><text class="fn" x="134" y="127.8">3</text><text class="nn" x="34" y="191">G</text><text class="nn" x="54" y="191">B</text><text class="nn" x="74" y="191">D</text><text class="nn" x="94" y="191">G</text><text class="nn" x="114" y="191">B</text><text class="nn" x="134" y="191">G</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Middle</td><td>low E</td><td class='num'>3</td></tr><tr><td>Index</td><td>A</td><td class='num'>2</td></tr><tr><td>Ring</td><td>high E</td><td class='num'>3</td></tr><tr><td>Open</td><td>D, G, B</td><td class='num'>0</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">Starts each line of the chorus, for two beats. In the strummed version the A string is hammered on from open to fret 2 as the second bass note.</p>
+  <footer>
+    <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 1 at <b>6:53</b></span></span>
+    <label class="got" for="got-g"><input type="checkbox" id="got-g" data-got="g"> I can play this</label>
+  </footer>
+</article>
+<article class="chord fam-slash" id="chord-d-csharp">
+  <header>
+    <h3>D/C#</h3>
+    <p class="meta"><span class="tag">D over a moving bass</span><span>Chorus</span></p>
+    <p class="where">D with the A string fretted at fret 4</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="D/C# chord diagram: string 5 fret 4, string 4 open, string 3 fret 2, string 2 fret 3, string 1 fret 2"><line class="nut" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string string-off" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="mk" x="34" y="35">×</text><circle class="openring" cx="74" cy="30" r="4.5"/><circle class="dot" cx="54" cy="156" r="8.5"/><text class="fn" x="54" y="159.8">4</text><circle class="dot" cx="94" cy="92" r="8.5"/><text class="fn" x="94" y="95.8">1</text><circle class="dot" cx="114" cy="124" r="8.5"/><text class="fn" x="114" y="127.8">3</text><circle class="dot" cx="134" cy="92" r="8.5"/><text class="fn" x="134" y="95.8">2</text><text class="nn" x="54" y="191">C#</text><text class="nn" x="74" y="191">D</text><text class="nn" x="94" y="191">A</text><text class="nn" x="114" y="191">D</text><text class="nn" x="134" y="191">F#</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Pinky</td><td>A</td><td class='num'>4</td></tr><tr><td>Index</td><td>G</td><td class='num'>2</td></tr><tr><td>Ring</td><td>B</td><td class='num'>3</td></tr><tr><td>Middle</td><td>high E</td><td class='num'>2</td></tr><tr><td>Open</td><td>D</td><td class='num'>0</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">One beat. Keep the D chord and add the A string at fret 4. The instructor says you can let the top string go open if that helps you reach it. The finger shown for the bass note is a guess; use whichever reaches.</p>
+  <footer>
+    <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 1 at <b>7:49</b></span></span>
+    <label class="got" for="got-d-csharp"><input type="checkbox" id="got-d-csharp" data-got="d-csharp"> I can play this</label>
+  </footer>
+</article>
+<article class="chord fam-slash" id="chord-d-a">
+  <header>
+    <h3>D/A</h3>
+    <p class="meta"><span class="tag">D over a moving bass</span><span>Chorus</span></p>
+    <p class="where">D with the open A string as its bass note</p>
+  </header>
+  <div class="chord-body">
+    <svg class="chordbox" viewBox="0 0 150 200" role="img" aria-label="D/A chord diagram: string 5 open, string 4 open, string 3 fret 2, string 2 fret 3, string 1 fret 2"><line class="nut" x1="34" y1="44" x2="134" y2="44"/><line class="fret" x1="34" y1="76" x2="134" y2="76"/><line class="fret" x1="34" y1="108" x2="134" y2="108"/><line class="fret" x1="34" y1="140" x2="134" y2="140"/><line class="fret" x1="34" y1="172" x2="134" y2="172"/><line class="string string-off" x1="34" y1="44" x2="34" y2="172" stroke-width="2.2"/><line class="string" x1="54" y1="44" x2="54" y2="172" stroke-width="1.9"/><line class="string" x1="74" y1="44" x2="74" y2="172" stroke-width="1.6"/><line class="string" x1="94" y1="44" x2="94" y2="172" stroke-width="1.3"/><line class="string" x1="114" y1="44" x2="114" y2="172" stroke-width="1.1"/><line class="string" x1="134" y1="44" x2="134" y2="172" stroke-width="1.0"/><text class="mk" x="34" y="35">×</text><circle class="openring" cx="54" cy="30" r="4.5"/><circle class="openring" cx="74" cy="30" r="4.5"/><circle class="dot" cx="94" cy="92" r="8.5"/><text class="fn" x="94" y="95.8">1</text><circle class="dot" cx="114" cy="124" r="8.5"/><text class="fn" x="114" y="127.8">3</text><circle class="dot" cx="134" cy="92" r="8.5"/><text class="fn" x="134" y="95.8">2</text><text class="nn" x="54" y="191">A</text><text class="nn" x="74" y="191">D</text><text class="nn" x="94" y="191">A</text><text class="nn" x="114" y="191">D</text><text class="nn" x="134" y="191">F#</text></svg>
+    <table class="fingers">
+      <thead><tr><th scope="col">Finger</th><th scope="col">String</th><th scope="col" class="num">Fret</th></tr></thead>
+      <tbody><tr><td>Index</td><td>G</td><td class='num'>2</td></tr><tr><td>Ring</td><td>B</td><td class='num'>3</td></tr><tr><td>Middle</td><td>high E</td><td class='num'>2</td></tr><tr><td>Open</td><td>A, D</td><td class='num'>0</td></tr></tbody>
+    </table>
+  </div>
+  <p class="tip">One beat, at the end of the walk down. It is the plain D shape; only the thumb changes, starting on the open A string.</p>
+  <footer>
+    <span class="when"><svg class="clock" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.6"/><path d="M6 3.4V6l1.8 1.2"/></svg><span>Part 1 at <b>8:05</b></span></span>
+    <label class="got" for="got-d-a"><input type="checkbox" id="got-d-a" data-got="d-a"> I can play this</label>
+  </footer>
+</article></div>
+</section>
+
+<section aria-labelledby="h-practice">
+  <h2 id="h-practice">A practice order</h2>
+  <ol class="steps">
+    <li>Hold D and play the thumb alone, D string then G string, until it is even.</li>
+    <li>Add the fingers in the gaps: B string, then high E string. That bar is the intro.</li>
+    <li>Take the pattern through the verse chords, letting the thumb move to each chord's root.</li>
+    <li>Learn the walk down in the chorus slowly: D, D/C#, Bm, D/A, one beat each.</li>
+    <li>Follow part 1 bar by bar for the small changes, then play verse and chorus with the play-through.</li>
+    <li>If you want the strummed half, start with thumb and a brush down on each chord, then add the rest.</li>
+  </ol>
+</section>
+
+<section aria-labelledby="h-video">
+  <h2 id="h-video">Find it in the videos</h2>
+  <div class="contents"><h3>Play-through<span>4:20</span></h3><ol class="chapters"><li><span class="row"><span class="t">0:00</span><span>The whole song, picked for the first half and strummed for the second.</span></span></li></ol></div>
+  <div class="contents"><h3>Part 1<span>14:41</span></h3><ol class="chapters"><li><span class="row"><span class="t">0:11</span><span>The intro: one bar of the pattern on D.</span></span></li><li><span class="row"><span class="t">1:00</span><span>Bars 2 and 3: D to C, then Bm. Which finger takes which string.</span></span></li><li><span class="row"><span class="t">2:55</span><span>Bar 4, E, and bar 5, A.</span></span></li><li><span class="row"><span class="t">4:26</span><span>Bars 6 and 7: the second line, with a brush strum on D.</span></span></li><li><span class="row"><span class="t">5:44</span><span>Bars 8 and 9, and the way into the chorus.</span></span></li><li><span class="row"><span class="t">6:49</span><span>Chorus, bars 10 and 11: G to A, then the walk down from D.</span></span></li><li><span class="row"><span class="t">8:50</span><span>Bars 12 and 13: the thumb changes strings.</span></span></li><li><span class="row"><span class="t">10:36</span><span>Bars 14 and 15: G to A, then D to C.</span></span></li><li><span class="row"><span class="t">12:07</span><span>Bars 16 and 17: Bm, E, the ringing A and the bass run.</span></span></li><li><span class="row"><span class="t">13:43</span><span>Playing the whole song this way, and why part 2 exists.</span></span></li></ol></div>
+  <div class="contents"><h3>Part 2<span>10:58</span></h3><ol class="chapters"><li><span class="row"><span class="t">0:14</span><span>Verse 3, bars 18 and 19: the strum on D, C and Bm.</span></span></li><li><span class="row"><span class="t">2:08</span><span>The two strum shapes, and why either will do.</span></span></li><li><span class="row"><span class="t">3:03</span><span>Bars 20 and 21: E with a hammer-on, A and the bass run.</span></span></li><li><span class="row"><span class="t">4:41</span><span>Chorus 3, bars 26 and 27: G with a hammer-on, A, the walk down.</span></span></li><li><span class="row"><span class="t">6:31</span><span>Bars 30 to 33: the rest of the chorus.</span></span></li><li><span class="row"><span class="t">8:28</span><span>How the song ends: verse chords once, then the outro.</span></span></li><li><span class="row"><span class="t">9:04</span><span>The outro played, then broken down.</span></span></li></ol></div>
+</section>
+
+<footer class="source">
+  <p>Source: the Danny's Song lesson from <a href="https://www.jerrysguitarbar.com">Jerry's Guitar Bar</a>, a paid download of three videos, a tab and a chord sheet. None of those files are on this site, and the tab and the words of the song are not copied here.</p>
+  <p>The diagrams were drawn for these notes and are not frames from the videos.</p>
+</footer>
+
+</main>
+<script>
+(function () {
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('input[data-got]'));
+  var out = document.getElementById('progress');
+  var KEY = 'dannys-song-shapes';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  function render() {
+    var n = boxes.filter(function (b) { return b.checked; }).length;
+    out.textContent = n === 0 ? 'Tick each shape off as you get it clean.'
+      : n === boxes.length ? 'All ' + n + ' shapes ticked off. Time to set the thumb going under them.'
+      : n + ' of ' + boxes.length + ' shapes ticked off.';
+  }
+  boxes.forEach(function (b) {
+    b.checked = !!saved[b.getAttribute('data-got')];
+    b.addEventListener('change', function () {
+      saved[b.getAttribute('data-got')] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {}
+      render();
+    });
+  });
+  render();
+})();
+</script>
+</body>
+</html>
