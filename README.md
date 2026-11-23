@@ -36,6 +36,10 @@ gild-the-lily/
   index.html            the explainer page, generated
   build.py              the data and the generator for that page
   README.md             source, prompt, process and data for that page
+  pre-intro/            a practice sheet for the seven bars before the intro
+    index.html          the tab and its player, generated
+    build.py            the notes and the generator for that sheet
+    README.md           source, prompt, process and data for that sheet
 banana-pancakes/
   index.html            the explainer page, generated
   build.py              the data and the generator for that page
@@ -87,5 +91,9 @@ GitHub Pages serves the `main` branch from the repository root. Pushing to
 ## Credit
 
 The lessons belong to their instructors; each page links back to its source
-video. The pages contain no video frames, lyrics or TAB; the video is played
-by YouTube's own embedded player. Diagrams are original drawings.
+video. The pages contain no video frames or lyrics, and the video is played
+by YouTube's own embedded player. Diagrams are original drawings. One sheet
+writes notes out as TAB:
+[the Gild the Lily pre-intro](gild-the-lily/pre-intro/README.md), seven bars
+redrawn from a lesson's on-screen tab at the site owner's request and
+credited to that lesson.

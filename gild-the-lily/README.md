@@ -78,6 +78,15 @@ links to tablature other people publish: Ultimate Guitar's official tab and
 its free intro tab, a Soundslice tab that goes with another lesson, and a
 lesson that shows tab on screen.
 
+## The pre-intro practice sheet
+
+A later request added [`pre-intro/`](pre-intro/): seven slow bars that a
+different lesson, B-RoM's, plays before the intro lick, redrawn as tab with a
+player that loops them at any tempo. That sheet does write its notes out,
+because the site's owner asked for it, and
+[its own write-up](pre-intro/README.md) says how it was made. Everything
+below is about the main page, which still does not.
+
 ## Process
 
 1. **Choosing the lesson.** Six candidates came out of YouTube search. Their

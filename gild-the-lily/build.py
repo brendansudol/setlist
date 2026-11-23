@@ -1082,7 +1082,7 @@ def page():
   <p>Four beats to the bar. A narrow box is two beats and a wide box is a whole bar. Tap a box to jump to its shape. Where a box says “or”, the sources disagree, and the note under that section says how.</p>
   <div class="part">
     <div class="part-head"><h3>Intro lick</h3>{from_part("Intro lick")}</div>
-    <p class="note">A single-note lick that comes round four times, each a little different. It is <a href="#h-lick">mapped pass by pass further down</a>.</p>
+    <p class="note">A single-note lick that comes round four times, each a little different. It is <a href="#h-lick">mapped pass by pass further down</a>. The slow bars another lesson plays before it have <a href="pre-intro/">their own practice sheet</a>.</p>
   </div>
   <div class="part">
     <div class="part-head"><h3>Verse</h3>{from_part("Verse")}</div>
@@ -1130,6 +1130,7 @@ def page():
   </figure>
   {lick_passes()}
   <p class="readme"><b>If you want the notes written out,</b> other people publish them. Ultimate Guitar has an <a href="https://tabs.ultimate-guitar.com/tab/billy-strings/gild-the-lily-official-5461431">official tab</a> and a <a href="https://tabs.ultimate-guitar.com/tab/billy-strings/gild-the-lily-tabs-5451279">free tab of the intro</a>. <a href="https://youtu.be/T_WD_2jUtdg">Quinn Tuff's lesson</a> comes with a <a href="https://www.soundslice.com/slices/Q3mqc/">tab on Soundslice</a>, and <a href="https://www.youtube.com/watch?v=U9BqvaBOR8Y&amp;t=192s">B-RoM's lesson</a> shows tab on screen from 3:12. They are their authors' transcriptions and were not checked against this lesson.</p>
+  <p class="readme"><b>The pre-intro is written out here.</b> The seven slow bars B-RoM's lesson plays before the lick are on <a href="pre-intro/">a practice sheet of their own</a>: the tab with the count under it, and a player that loops any bar at any tempo.</p>
   <ul class="points">
     <li>Where two notes in a row sit at the same fret on neighbouring strings, he rolls one fingertip across them instead of lifting it.</li>
     <li>In the low turn he uses the ring finger at fret 7 and the index at fret 5, so the hand stays in one position.</li>
