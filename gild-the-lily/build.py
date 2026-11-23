@@ -141,12 +141,13 @@ STANDS_IN_FOR = {"bm-small": "bm", "fsharp7-small": "fsharp7"}
 
 # One entry per chord change: (chord id, beats). Four beats to the bar.
 # "walk" is the two beats where the bass steps down from G towards Em.
-VERSE = [("d", 2), ("am", 2), ("g", 2), ("d", 2), ("d", 2), ("c", 2), ("d", 4)]
+# A third item is the chord the other two sources play there instead (see OTHERS).
+VERSE = [("d", 2), ("am", 2), ("g", 2), ("d", 2), ("d", 2), ("c", 2, "am"), ("d", 4)]
 CHORUS = [("bm", 4), ("fsharp7", 4), ("d", 2), ("a", 2), ("bm", 4),
           ("d", 2), ("a", 2), ("bm", 4), ("d", 2), ("a", 2), ("g", 4),
           ("d", 2), ("a", 2), ("g", 2), ("walk", 2), ("em", 4)]
-BRIDGE = [("fsharp-m", 2), ("c", 2), ("d", 4),
-          ("d", 2), ("fsharp7", 2), ("c", 4), ("d", 4)]
+BRIDGE = [("fsharp-m", 2), ("c", 2, "am"), ("d", 4),
+          ("d", 2), ("fsharp7", 2, "fsharp-m"), ("c", 4), ("d", 4)]
 SECTIONS = [("verse", VERSE), ("chorus", CHORUS), ("bridge", BRIDGE)]
 
 # (seconds, the chapter title YouTube shows, what happens in it), per part
@@ -171,6 +172,74 @@ CHAPTERS = {
                                    "longer lick that ends the song."),
     ],
 }
+
+# What the chords were checked against. Neither is the page's source.
+OTHERS = dict(
+    lesson_url="https://youtu.be/3mD8i0xpo6Q",
+    lesson_title="Billy Strings - Gild The Lily Guitar Lesson+ tutorial",
+    lesson_by="Phish Picks Guitar Lessons",
+    chart_url="https://www.guitartabsexplorer.com/strings-billy/gild-the-lily-chords",
+    chart_by="GuitarTabsExplorer",
+)
+
+# The intro lick as the lesson teaches it: which stretch of the neck it uses and
+# what each pass is made of. This is a guide to the lesson, not a transcription.
+# The notes of the lick are deliberately not in this file.
+# zone = (letter, style, first fret, last fret, first string, last string),
+# with strings counted from 0 (high E) to 5 (low E), the way tablature is drawn
+LICK_ZONES = [
+    ("A", "zone-a", 5, 10, 0, 3),
+    ("B", "zone-b", 5, 9, 3, 4),
+    ("C", "zone-c", 11, 14, 0, 2),
+]
+# segs = (zone letter, name of that stretch of the pass); links = (moment, button text)
+LICK = [
+    dict(name="Pass 1, the long one",
+         segs=[("A", "Opening"), ("B", "Low turn"), ("B", "Slide and skip")],
+         text="Starts at the top of the home zone on the two highest strings "
+              "and works its way down. Low in the zone it turns around on the "
+              "D and A strings with a quick triplet, then ends with a "
+              "ring-finger slide and a jump over one string. The instructor "
+              "points out one more quiet note at the very end.",
+         links=[((1, 24), "Part 1 at"), ((1, 84), "Second half: part 1 at"),
+                ((1, 139), "Slowly: part 1 at")]),
+    dict(name="Pass 2, the short one",
+         segs=[("A", "Opening")],
+         text="The same opening, stopped early. It ends when it reaches the "
+              "G string, before the low turn.",
+         links=[((1, 151), "Part 1 at")]),
+    dict(name="Pass 3, with a run",
+         segs=[("A", "Opening"), ("A", "Run")],
+         text="The lesson describes this as pass 1 with a little run. The "
+              "run takes off from the note where pass 2 stops, climbs the B "
+              "string and lands on the high E. The lesson shows the run on "
+              "its own, so use the play-through to hear how it joins the "
+              "rest.",
+         links=[((1, 166), "Part 1 at"), ((1, 183), "The run: part 1 at")]),
+    dict(name="Pass 4, the fast ending",
+         segs=[("A", "Opening"), ("C", "Fast ending")],
+         text="Pass 2 with a new ending: a slide up the G string, which the "
+              "instructor plays with his middle finger, then three notes "
+              "climbing the high E as far as fret 14.",
+         links=[((1, 202), "Part 1 at"), ((1, 229), "The ending: part 1 at")]),
+    dict(name="All four together",
+         segs=[],
+         text="The whole intro played through. This is the instructor's "
+              "second try, after he stops the first.",
+         links=[((1, 271), "Part 1 at")]),
+    dict(name="The outro",
+         segs=[("A", "Opening"), ("A", "Run"), ("C", "Climb and bend")],
+         text="The song ends on the lick. The first two passes are as "
+              "before. Then the run from pass 3 keeps climbing the high E to "
+              "fret 12, where the note is bent, and a short figure a little "
+              "higher up closes the song.",
+         links=[((2, 584), "Part 2 at"), ((2, 612), "The new notes: part 2 at")]),
+]
+
+# One bar of the picking hand, four slots to the beat ("1 e & a"), as seen in
+# the lesson's play-throughs. D = a wide down stroke, d = down, u = up, . = none.
+STRUM_VERSE = "DuduDuduDuduDudu"
+STRUM_CHORUS = "D...D...D...D..."
 
 # Where the lesson plays each section. The song map's "From" buttons and the
 # shortcuts next to the video both come from this.
@@ -217,13 +286,14 @@ def check():
                        if ch["frets"][i] == fret), f"{n}: barre finger mismatch"
     for name, seq in SECTIONS:
         beat = 0
-        for cid, beats in seq:
+        for cid, beats, *other in seq:
             assert cid in C or cid == "walk", f"unknown chord in the {name}: {cid}"
+            assert all(o in C for o in other), f"unknown alternative in the {name}: {other}"
             assert beats in (2, 4), f"{name}: chords last two beats or a bar"
             assert beats == 2 or beat % 4 == 0, f"{name}: a whole-bar chord starts on beat 1"
             beat += beats
         assert beat % 4 == 0, f"the {name} does not end on a bar line"
-    used = {cid for _, seq in SECTIONS for cid, _ in seq} - {"walk"}
+    used = {entry[0] for _, seq in SECTIONS for entry in seq} - {"walk"}
     assert used == set(C) - set(STANDS_IN_FOR), f"chords never used: {set(C) - set(STANDS_IN_FOR) - used}"
     assert all(C[cid]["fam"] == "small" and full in used for cid, full in STANDS_IN_FOR.items())
     for part, chapters in CHAPTERS.items():
@@ -231,11 +301,18 @@ def check():
         assert times == sorted(times) and times[-1] < VIDEOS[part]["length"], "chapters out of order"
     for name, (part, t) in PARTS:
         assert part in VIDEOS and 0 <= t < VIDEOS[part]["length"], f"{name}: timestamp outside the video"
+    letters = {z[0] for z in LICK_ZONES}
+    for z in LICK_ZONES:
+        assert 4 <= z[2] <= z[3] <= 15 and 0 <= z[4] <= z[5] <= 5, f"zone {z[0]} is off the drawn neck"
+    for lick_pass in LICK:
+        assert all(letter in letters for letter, _ in lick_pass["segs"]), lick_pass["name"]
+    for pattern in (STRUM_VERSE, STRUM_CHORUS):
+        assert len(pattern) == 16 and set(pattern) <= set("Ddu."), "a strumming bar is sixteen slots"
 
 
 def used_in(cid):
     cid = STANDS_IN_FOR.get(cid, cid)
-    names = [name for name, seq in SECTIONS if any(c == cid for c, _ in seq)]
+    names = [name for name, seq in SECTIONS if any(entry[0] == cid for entry in seq)]
     text = names[0] if len(names) == 1 else ", ".join(names[:-1]) + " and " + names[-1]
     return text[0].upper() + text[1:]
 
@@ -376,15 +453,93 @@ def card(ch):
 def chips(seq):
     """A section as boxes: a narrow box is two beats, a wide one a whole bar."""
     items, beat = [], 0
-    for cid, beats in seq:
+    for cid, beats, *other in seq:
         label = f"bar {beat // 4 + 1}" if beat % 4 == 0 else "beat 3"
         ch = C["g" if cid == "walk" else cid]
         name = "walk" if cid == "walk" else ch["name"]
         cls = f'fam-{ch["fam"]}' + (" whole" if beats == 4 else "")
+        alt = f'<span class="or">or {C[other[0]]["name"]}</span>' if other else ""
         items.append(f'<li class="{cls}"><a href="#chord-{ch["id"]}">'
-                     f'<span class="bar">{label}</span><span class="nm">{name}</span></a></li>')
+                     f'<span class="bar">{label}</span><span class="nm">{name}</span>{alt}</a></li>')
         beat += beats
     return f'<ol class="loop">{"".join(items)}</ol>'
+
+
+def strum(pattern, chords, label):
+    """One bar of the picking hand as arrows, four slots to the beat.
+    `chords` is a list of (slot, name) for the chord names above the bar."""
+    counts = "1e&a2e&a3e&a4e&a"
+    x0, step = 24, 20.8
+    o = [f'<svg class="strum" viewBox="0 0 360 96" role="img" aria-label="{escape(label, quote=True)}">']
+    for b in (1, 2, 3):
+        x = x0 + step * 4 * b - step / 2
+        o.append(f'<line class="beatline" x1="{x:.1f}" y1="24" x2="{x:.1f}" y2="90"/>')
+    for slot, name in chords:
+        o.append(f'<text class="strum-ch" x="{x0 + step * slot - 5:.1f}" y="15">{escape(name)}</text>')
+    for i, (stroke, count) in enumerate(zip(pattern, counts)):
+        x = x0 + step * i
+        if stroke != ".":
+            wide = stroke == "D"
+            top, bottom, head = (26, 66, 6) if wide else (34, 60, 4.5)
+            tip, tail, d = (bottom, top, 1) if stroke in "Dd" else (top, bottom, -1)
+            o.append(f'<path class="stroke{" stroke-wide" if wide else ""}" d="M{x:.1f} {tail}V{tip}'
+                     f'M{x - head:.1f} {tip - d * head}L{x:.1f} {tip}L{x + head:.1f} {tip - d * head}"/>')
+        cls = "count count-beat" if count.isdigit() else "count"
+        o.append(f'<text class="{cls}" x="{x:.1f}" y="84">{escape(count)}</text>')
+    o.append("</svg>")
+    return "".join(o)
+
+
+def neckmap():
+    """The stretch of the neck the intro lick uses, as three zones. No notes."""
+    lo, hi = 4, 15
+    x0, x1 = 44, 352
+    fw = (x1 - x0) / (hi - lo + 1)
+    ys = [34 + 18 * i for i in range(6)]  # high E at the top, as in tablature
+    names = ["high E", "B", "G", "D", "A", "low E"]
+    widths = [1.0, 1.1, 1.3, 1.6, 1.9, 2.2]
+
+    def fx(f):
+        return x0 + fw * (f - lo)
+
+    label = ("Fretboard from fret 4 to fret 15 with three zones marked. "
+             + " ".join(f"Zone {z[0]}: frets {z[2]} to {z[3]}, {names[z[4]]} string to {names[z[5]]} string."
+                        for z in LICK_ZONES))
+    o = [f'<svg class="neck" viewBox="0 0 360 150" role="img" aria-label="{escape(label, quote=True)}">']
+    o.append(f'<rect class="board" x="{x0}" y="{ys[0] - 8}" width="{x1 - x0}" height="{ys[5] - ys[0] + 16}" rx="3"/>')
+    for f in range(lo, hi + 2):
+        o.append(f'<line class="fret" x1="{fx(f):.1f}" y1="{ys[0] - 8}" x2="{fx(f):.1f}" y2="{ys[5] + 8}"/>')
+    for f in range(lo, hi + 1):
+        o.append(f'<text class="fnum" x="{fx(f) + fw / 2:.1f}" y="18">{f}</text>')
+    for f in (5, 7, 9, 15):
+        o.append(f'<circle class="inlay" cx="{fx(f) + fw / 2:.1f}" cy="{(ys[2] + ys[3]) / 2}" r="3"/>')
+    for y in ((ys[1] + ys[2]) / 2, (ys[3] + ys[4]) / 2):
+        o.append(f'<circle class="inlay" cx="{fx(12) + fw / 2:.1f}" cy="{y}" r="3"/>')
+    for i, y in enumerate(ys):
+        o.append(f'<line class="string" x1="{x0}" y1="{y}" x2="{x1}" y2="{y}" stroke-width="{widths[i]}"/>')
+        o.append(f'<text class="slab" x="{x0 - 6}" y="{y + 3.3}">{names[i]}</text>')
+    for letter, cls, f1, f2, s1, s2 in LICK_ZONES:
+        x, w = fx(f1) + 2, fx(f2 + 1) - fx(f1) - 4
+        y, h = ys[s1] - 7, ys[s2] - ys[s1] + 14
+        o.append(f'<rect class="{cls}" x="{x:.1f}" y="{y}" width="{w:.1f}" height="{h}" rx="6"/>')
+        bx = x + w - 9 if letter == "C" else x + 9
+        by = y + h - 9 if letter == "B" else y + 9
+        o.append(f'<circle class="zbadge" cx="{bx:.1f}" cy="{by}" r="7"/>')
+        o.append(f'<text class="zlet" x="{bx:.1f}" y="{by + 3.6}">{letter}</text>')
+    o.append("</svg>")
+    return "".join(o)
+
+
+def lick_passes():
+    items = []
+    for lick_pass in LICK:
+        segs = "".join(f'<span class="seg"><b>{letter}</b>{escape(name)}</span>' for letter, name in lick_pass["segs"])
+        short = lick_pass["name"].split(",")[0]
+        links = " ".join(watch(at, label, f"Intro lick: {short[0].lower() + short[1:]}") for at, label in lick_pass["links"])
+        items.append(f'<li><strong>{escape(lick_pass["name"])}</strong>'
+                     + (f'<p class="segs">{segs}</p>' if segs else "")
+                     + f'<p>{escape(lick_pass["text"])}</p><div class="linkrow">{links}</div></li>')
+    return f'<ol class="passes">{"".join(items)}</ol>'
 
 
 # ---------------------------------------------------------------------- page
@@ -454,6 +609,36 @@ header.top { display: grid; gap: 12px; }
 .loop .bar { font-size: .6875rem; letter-spacing: .06em; color: var(--muted); font-variant-numeric: tabular-nums; }
 .loop .nm { font: 700 1.125rem/1.1 var(--font-display); }
 .loop .whole { grid-column: span 2; }  /* a chord that lasts the whole bar */
+.loop .or { font-size: .6875rem; font-weight: 700; color: var(--muted); }  /* what the other sources play there */
+
+/* figures: the strumming bars and the map of the intro lick */
+figure { margin: 0; display: grid; gap: 10px; }
+figcaption { font-size: .875rem; color: var(--muted); max-width: 62ch; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 10px; }
+.strum, .neck { display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto; }
+.stroke { fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; opacity: .6; }
+.stroke-wide { stroke-width: 3.2; opacity: 1; }
+.count { fill: var(--muted); font-size: 10px; text-anchor: middle; }
+.count-beat { fill: var(--ink); font-size: 11.5px; font-weight: 700; }
+.strum-ch { fill: var(--ink); font-family: var(--font-display); font-size: 13px; font-weight: 700; }
+.beatline { stroke: var(--ink); opacity: .12; }
+.neck .board { fill: var(--ink); opacity: .05; }
+.neck .string { opacity: .45; }
+.inlay { fill: var(--ink); opacity: .2; }
+.fnum { fill: var(--muted); font-size: 9px; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.slab { fill: var(--muted); font-size: 9px; text-anchor: end; }
+.zone-a { fill: var(--ink); opacity: .13; }
+.zone-b { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-dasharray: 5 3.5; }
+.zone-c { fill: var(--ink); opacity: .3; }
+.zbadge { fill: var(--ink); }
+.zlet { fill: var(--bg); font-size: 9.5px; font-weight: 700; text-anchor: middle; }
+.passes { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.passes li { display: grid; gap: 8px; padding-top: 14px; border-top: 1px solid var(--line); }
+.passes strong { font-family: var(--font-display); font-size: 1.0625rem; }
+.passes p { font-size: .9375rem; color: var(--muted); }
+.segs { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px 2px 3px; border: 1px solid var(--line); border-radius: 99px; background: var(--surface); color: var(--ink); font-size: .8125rem; font-weight: 700; }
+.seg b { display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--ink); color: var(--bg); font-size: .6875rem; }
 .note { font-size: .9375rem; color: var(--muted); }
 
 /* shape families */
@@ -883,42 +1068,80 @@ def page():
 <header class="top">
   <p class="eyebrow">Guitar lesson notes</p>
   <h1>Gild the Lily: {NUMBER_WORDS[n]} chord shapes</h1>
-  <p class="lede">The rhythm-guitar side of the Billy Strings song: the chords for the verse, chorus and bridge and the order the sections come in, worked out from William A. Yarbrough's two-part lesson. Tap any time on this page to play that moment of the lesson. The video stays on screen while you read.</p>
+  <p class="lede">The rhythm-guitar side of the Billy Strings song: the chords for the verse, chorus and bridge and the order the sections come in, worked out from William A. Yarbrough's two-part lesson and checked against a second lesson and a chord chart. Tap any time on this page to play that moment of the lesson. The video stays on screen while you read.</p>
   <dl class="facts">
     <div><dt>Tuning</dt><dd>Standard. The lesson does not say so, but the frets it names only make these chords in standard tuning.</dd></div>
     <div><dt>Capo</dt><dd>None</dd></div>
     <div><dt>To learn</dt><dd>Nine chords, plus three-note versions of the two hardest</dd></div>
-    <div><dt>Not here</dt><dd>The intro lick. Part 1 teaches it note by note; this page only points to it.</dd></div>
+    <div><dt>Not written out</dt><dd>The notes of the intro lick. Part 1 teaches them fret by fret; this page maps the lick and links to each pass.</dd></div>
   </dl>
 </header>
 
 <section aria-labelledby="h-map">
   <h2 id="h-map">The song map</h2>
-  <p>Four beats to the bar. A narrow box is two beats and a wide box is a whole bar. Tap a box to jump to its shape.</p>
+  <p>Four beats to the bar. A narrow box is two beats and a wide box is a whole bar. Tap a box to jump to its shape. Where a box says “or”, the sources disagree, and the note under that section says how.</p>
   <div class="part">
     <div class="part-head"><h3>Intro lick</h3>{from_part("Intro lick")}</div>
-    <p class="note">A single-note lick that comes round four times. The second pass stops early (1:10), the third adds a run (2:46) and the fourth has its own ending (3:22). The lesson gives it fret by fret; this page does not write it out.</p>
+    <p class="note">A single-note lick that comes round four times, each a little different. It is <a href="#h-lick">mapped pass by pass further down</a>.</p>
   </div>
   <div class="part">
     <div class="part-head"><h3>Verse</h3>{from_part("Verse")}</div>
     {chips(VERSE)}
-    <p class="note">Two beats a chord, then D for a whole bar, as the lesson counts it. The four bars are played twice. There are lead lines over the verse on the record; the instructor's advice is to concentrate on the chords, especially if you are the only guitar. One chord chart found online has Am where this lesson plays C; this page follows the lesson.</p>
+    <p class="note">Two beats a chord, then D for a whole bar, as the lesson counts it. The four bars are played twice. In bar 3 this lesson plays C, while the second lesson and the chord chart both have Am, so two sources out of three say Am. Try both against the record. There are lead lines over the verse on the record; the instructor's advice is to concentrate on the chords, especially if you are the only guitar.</p>
   </div>
   <div class="part">
     <div class="part-head"><h3>Chorus</h3>{from_part("Chorus")}</div>
     {chips(CHORUS)}
-    <p class="note">After the first two chords it is one move four times: D and A for two beats each, then a third chord. That chord is Bm twice, then G twice. The last G is cut to two beats so the bass can walk down the low E string, fret 3 to fret 2 to open, and land on Em. The lesson counts everything from the first D out loud. It does not count the Bm and F#7 at the start, which are drawn here as a bar each.</p>
+    <p class="note">After the first two chords it is one move four times: D and A for two beats each, then a third chord. That chord is Bm twice, then G twice. The last G is cut to two beats so the bass can walk down the low E string, fret 3 to fret 2 to open, and land on Em. The second lesson and the chord chart give the same order and call the walk-down beat a D chord, which with that bass note is D over F#. The lesson counts everything from the first D out loud. It does not count the Bm and F#7 at the start, which are drawn here as a bar each.</p>
   </div>
   <div class="part">
     <div class="part-head"><h3>Bridge</h3>{from_part("Bridge")}</div>
     {chips(BRIDGE)}
-    <p class="note">Heard once, after the second chorus. The instructor calls it the key change. The first F# chord is minor and the second is the F#7 from the chorus. The first D runs on across the bar line, six beats in all. After the last D there is a rest, then the intro lick. This is the least certain section on the page: the beat counts are partly read from the video, and one chord chart found online gives the chords differently.</p>
+    <p class="note">Heard once, after the second chorus. The instructor calls it the key change. This is the least certain section on the page. This lesson plays F#m, C, D and then F#7, C, D. The second lesson and the chord chart both have Am in place of the first C and F#m in place of the F#7. The first D runs on across the bar line, six beats in all, and after the last D there is a rest, then the intro lick. Some of the beat counts are read from the video rather than counted aloud.</p>
   </div>
+</section>
+
+<section aria-labelledby="h-strum">
+  <h2 id="h-strum">Strumming</h2>
+  <p>Neither this lesson nor the second one teaches a strumming pattern in words. The instructor counts beats and changes chords. What follows is what his picking hand does in two play-throughs, read from the video a frame at a time with the sound off. It shows the motion of the hand, not which strokes are meant to ring.</p>
+  <div class="part">
+    <div class="part-head"><h3>Verse: the hand never stops</h3>{watch((1, 370), "Part 1 at", "Verse strumming")}</div>
+    <figure>
+      <div class="panel">{strum(STRUM_VERSE, [(0, "D"), (8, "Am")], "One bar of the verse: down, up, down, up on every beat, with the first down of each beat the widest.")}</div>
+      <figcaption>The first bar of the verse. Down, up, down, up inside every beat, counted “1 e &amp; a”. The first down of each beat is the widest and starts from above the low strings. Each chord gets two beats, so every chord change lands on a wide down.</figcaption>
+    </figure>
+  </div>
+  <div class="part">
+    <div class="part-head"><h3>Chorus: one strum to the beat</h3>{watch((2, 288), "Part 2 at", "Chorus strumming")}</div>
+    <figure>
+      <div class="panel">{strum(STRUM_CHORUS, [(0, "D"), (8, "A")], "One bar of the chorus: one wide down strum on each beat.")}</div>
+      <figcaption>A D and A bar of the chorus as he demonstrates it. He is naming the chords as he plays and keeps it plain: one wide down strum on each beat, lifting the hand clear of the strings in between.</figcaption>
+    </figure>
+  </div>
+  <p class="readme"><b>A way to practise it.</b> This part is a suggestion, not something the lesson says. Mute the strings with the fretting hand and get the verse motion even while you count. Add the verse chords once the hand keeps going through the changes. In the chorus, start with one down strum a beat, as he does, and fill in the same motion once the barre chords are landing cleanly.</p>
+</section>
+
+<section aria-labelledby="h-lick">
+  <h2 id="h-lick">The intro lick, pass by pass</h2>
+  <p>A guide to how the lesson teaches the lick: which stretch of the neck it uses, what each of its four passes is made of, and how the instructor fingers it. It is not a transcription. The notes are in the lesson, and each button goes to the moment it shows them.</p>
+  <figure>
+    <div class="panel">{neckmap()}</div>
+    <figcaption>The neck from fret 4 to fret 15, drawn the way tablature is, with the high E string at the top. <b>A</b> is the home zone, where almost all of the lick is played. <b>B</b>, the dashed box, is the low turn in pass 1. <b>C</b> is where the ending of pass 4 and the outro climb to.</figcaption>
+  </figure>
+  {lick_passes()}
+  <p class="readme"><b>If you want the notes written out,</b> other people publish them. Ultimate Guitar has an <a href="https://tabs.ultimate-guitar.com/tab/billy-strings/gild-the-lily-official-5461431">official tab</a> and a <a href="https://tabs.ultimate-guitar.com/tab/billy-strings/gild-the-lily-tabs-5451279">free tab of the intro</a>. <a href="https://youtu.be/T_WD_2jUtdg">Quinn Tuff's lesson</a> comes with a <a href="https://www.soundslice.com/slices/Q3mqc/">tab on Soundslice</a>, and <a href="https://www.youtube.com/watch?v=U9BqvaBOR8Y&amp;t=192s">B-RoM's lesson</a> shows tab on screen from 3:12. They are their authors' transcriptions and were not checked against this lesson.</p>
+  <ul class="points">
+    <li>Where two notes in a row sit at the same fret on neighbouring strings, he rolls one fingertip across them instead of lifting it.</li>
+    <li>In the low turn he uses the ring finger at fret 7 and the index at fret 5, so the hand stays in one position.</li>
+    <li>Each slide is one finger: the ring finger in pass 1 and the middle finger in pass 4.</li>
+    <li>He corrects himself several times while talking the lick through, and says so. The slow play-throughs are the safer guide.</li>
+  </ul>
+  <div class="linkrow">{watch((1, 46), "Rolling the finger: part 1 at", "Intro lick: rolling the finger")}</div>
 </section>
 
 <section aria-labelledby="h-order">
   <h2 id="h-order">The whole song, in order</h2>
-  <p>This is the order as the instructor describes it in part 2. He talks it through without playing the whole song and hesitates in places, and this page has not checked it against the recording.</p>
+  <p>This is the order as the instructor describes it in part 2. He talks it through without playing the whole song and hesitates in places. The second lesson gives the same broad order. Neither was checked against the recording.</p>
   <ol class="steps">
     <li>Intro lick, four passes.</li>
     <li>Verse.</li>
@@ -964,7 +1187,7 @@ def page():
 <section aria-labelledby="h-practice">
   <h2 id="h-practice">A practice order</h2>
   <ol class="steps">
-    <li>Loop the verse: D, Am, G, D, then D, C and a full bar of D. Count two beats a chord.</li>
+    <li>Loop the verse with the strumming above: D, Am, G, D, then D, C or Am, and a full bar of D. Count two beats a chord.</li>
     <li>Get Bm and F#7 clean on their own, as full barres or as the three-note versions, with nothing else ringing.</li>
     <li>Drill D to A to Bm: two beats, two beats, then a bar. Then the same with G in place of Bm.</li>
     <li>Add the end of the chorus: two beats of G, the walk down the low E string, and a bar of Em.</li>
@@ -981,6 +1204,7 @@ def page():
 
 <footer class="source">
   <p>Source: <a href="https://youtu.be/{v1["id"]}">{escape(v1["title"])}</a> and <a href="https://youtu.be/{v2["id"]}">Part 2</a> by William A. Yarbrough on YouTube. Part 1 teaches the intro lick and the verse; part 2 teaches the chorus, the bridge, the order of the song and the outro.</p>
+  <p>Checked against <a href="{OTHERS["lesson_url"]}">{escape(OTHERS["lesson_title"])}</a> by {OTHERS["lesson_by"]} and a <a href="{OTHERS["chart_url"]}">chord chart on {OTHERS["chart_by"]}</a>. Where they differ from the lesson, the page says so.</p>
   <p>The diagrams were drawn for these notes and are not frames from the video. Follow the timestamps to see the real hand positions.</p>
 </footer>
 
