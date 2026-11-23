@@ -213,10 +213,10 @@ Every timestamp on the page is an ordinary link to YouTube. A script at the
 bottom of the page turns a tap on one into "play that moment here".
 
 Every song has this player. Its styles, markup and script are the same text
-in this `build.py`, in `your-song/build.py`, in `gild-the-lily/build.py` and
-pasted into `heart-of-life/index.html`; only the videos, the shortcuts and
-the name of one colour differ. A change to the player has to be made in all
-four.
+in this `build.py` and in the `build.py` of `your-song`, `gild-the-lily` and
+`banana-pancakes`, and pasted into `heart-of-life/index.html`; only the
+videos, the shortcuts and the name of one colour differ. A change to the
+player has to be made in all five.
 
 The script can also switch videos, which only
 [Gild the Lily](../gild-the-lily/README.md) needs: its lesson is in two

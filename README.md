@@ -14,6 +14,7 @@ each shape appears in the video.
 | Your Song (Elton John), intro and verse | [your-song/](https://brendansudol.github.io/setlist/your-song/) | [your-song/README.md](your-song/README.md) |
 | All The Small Things (Blink-182), intro to chorus | [all-the-small-things/](https://brendansudol.github.io/setlist/all-the-small-things/) | [all-the-small-things/README.md](all-the-small-things/README.md) |
 | Gild the Lily (Billy Strings), verse, chorus and bridge | [gild-the-lily/](https://brendansudol.github.io/setlist/gild-the-lily/) | [gild-the-lily/README.md](gild-the-lily/README.md) |
+| Banana Pancakes (Jack Johnson), the whole song | [banana-pancakes/](https://brendansudol.github.io/setlist/banana-pancakes/) | [banana-pancakes/README.md](banana-pancakes/README.md) |
 
 ## Layout
 
@@ -34,15 +35,20 @@ gild-the-lily/
   index.html            the explainer page, generated
   build.py              the data and the generator for that page
   README.md             source, prompt, process and data for that page
+banana-pancakes/
+  index.html            the explainer page, generated
+  build.py              the data and the generator for that page
+  README.md             source, prompt, process and data for that page
 .nojekyll               tells GitHub Pages to serve the files as they are
 ```
 
 Every page is plain HTML with inline CSS, inline SVG and inline JavaScript,
 and the generated HTML is committed, so the site needs no build
-step to deploy. `your-song`, `all-the-small-things` and `gild-the-lily` each
-have their own `build.py` (standard library only); run it to regenerate that
-folder's `index.html`. The three scripts are separate copies that share most
-of their code. The generator for `heart-of-life` was not kept, so that page is edited
+step to deploy. `your-song`, `all-the-small-things`, `gild-the-lily` and
+`banana-pancakes` each have their own `build.py` (standard library only); run
+it to regenerate that folder's `index.html`. The four scripts are separate
+copies that share most of their code, and the pages they make are not meant
+to look alike: each is built around what its song needs. The generator for `heart-of-life` was not kept, so that page is edited
 by hand.
 
 Every song page has a docked video player: tapping a timestamp plays that
@@ -51,8 +57,8 @@ moment of the lesson in YouTube's embedded player, which stays on screen
 described in
 [the All The Small Things write-up](all-the-small-things/README.md#the-docked-player),
 where it was built first. The player's styles, markup and script are the same
-text in all three `build.py` files and in `heart-of-life/index.html`, so a
-change to it has to be made in all four. A lesson can be split across
+text in all four `build.py` files and in `heart-of-life/index.html`, so a
+change to it has to be made in all five. A lesson can be split across
 videos, as Gild the Lily's is: the player loads whichever one a timestamp
 belongs to.
 
