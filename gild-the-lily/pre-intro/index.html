@@ -275,24 +275,64 @@ details[open] summary { margin-bottom: 10px; }
   let first = 0, last = bars.length - 1;
   let queue = [], activeBar = -1, activeStep = null;
 
-  function buffer(midi) {
+  // Steel-string voice from Woodshed's js/audio.js (b7265be).
+  function fundamentalDecay(midi) {
+    if (midi <= 50) return 2.6;
+    if (midi <= 57) return 2.6 + ((midi - 50) / 7) * 8.4;
+    return 11 + (midi - 57) * 0.15;
+  }
+
+  function stringBuffer(midi) {
     if (buffers.has(midi)) return buffers.get(midi);
-    const frequency = 440 * 2 ** ((midi - 69) / 12);
-    const period = Math.round(ctx.sampleRate / frequency - 0.5);
-    const sound = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * 6.2), ctx.sampleRate);
-    const data = sound.getChannelData(0);
-    let previous = 0;
-    for (let i = 0; i < period; i++) {
-      previous = 0.55 * (Math.random() * 2 - 1) + 0.45 * previous;
-      data[i] = previous;
+    const sr = ctx.sampleRate, f0 = 440 * 2 ** ((midi - 69) / 12);
+    // A whole note at the slowest practice tempo lasts six seconds.
+    const sound = ctx.createBuffer(1, Math.ceil(sr * 6.2), sr);
+    const samples = sound.getChannelData(0);
+    const pickPosition = 0.19 + 0.035 * Math.sin(midi * 1.9);
+    const baseDecay = fundamentalDecay(midi);
+    const top = Math.min(5200, sr * 0.45);
+    const tilt = 1.55 - 0.45 * Math.min(1, Math.max(0, (midi - 50) / 14));
+    for (let k = 1; k * f0 < top; k++) {
+      const hz = k * f0 * Math.sqrt(1 + 0.00005 * k * k);
+      const body = hz * hz / (hz * hz + 115 * 115) / Math.sqrt(1 + (hz / 4200) ** 4);
+      const amp = Math.max(Math.abs(Math.sin(k * Math.PI * pickPosition)), 0.14) / k ** tilt * body;
+      const decay = baseDecay + 24 * (hz - f0) / 1000;
+      // The lower partials have a strong attack and a quieter, lingering component.
+      const parts = k <= 12 ? [[0.72, 1, -0.00014], [0.28, 0.5, 0.00036]] : [[1, 1, 0]];
+      for (const [share, speed, detune] of parts) {
+        const r = 10 ** (-(decay * speed) / 20 / sr);
+        const w = 2 * Math.PI * hz * (1 + detune) / sr;
+        const length = Math.min(samples.length, Math.ceil(60 / (decay * speed) * sr));
+        const c1 = 2 * r * Math.cos(w), c2 = r * r;
+        let last = 0, previous = -amp * share * Math.sin(w) / r;
+        for (let i = 0; i < length; i++) {
+          const sample = c1 * last - c2 * previous;
+          samples[i] += sample;
+          previous = last;
+          last = sample;
+        }
+      }
     }
-    data[period] = 0.5 * data[0];
-    for (let i = period + 1; i < data.length; i++) {
-      data[i] = 0.998 * 0.5 * (data[i - period] + data[i - period - 1]);
+
+    // A repeatable, twelve-millisecond pick transient.
+    let seed = midi * 9301 + 49297, noise = 0, peak = 0;
+    for (let i = 0; i < samples.length; i++) peak = Math.max(peak, Math.abs(samples[i]));
+    const attack = Math.floor(sr * 0.012);
+    for (let i = 0; i < attack; i++) {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      noise += 0.35 * (seed / 0x3fffffff - 1 - noise);
+      samples[i] += noise * peak * 0.22 * (1 - i / attack) ** 2;
     }
-    const pluck = { sound, rate: frequency * (period + 0.5) / ctx.sampleRate };
-    buffers.set(midi, pluck);
-    return pluck;
+    const windowLength = Math.floor(sr * 0.3);
+    let energy = 0;
+    for (let i = 0; i < windowLength; i++) energy += samples[i] ** 2;
+    const level = 0.16 / Math.sqrt(energy / windowLength);
+    const fade = Math.floor(sr * 0.2);
+    for (let i = 0; i < samples.length; i++) {
+      samples[i] *= level * Math.min(1, (samples.length - i) / fade);
+    }
+    buffers.set(midi, sound);
+    return sound;
   }
 
   function damp(time, strings = ringing.keys()) {
@@ -306,14 +346,20 @@ details[open] summary { margin-bottom: 10px; }
   }
 
   function pluck(string, midi, event, time, duration) {
-    const tone = buffer(midi);
     const source = ctx.createBufferSource();
     const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
     const soft = ['hammer', 'pull', 'slide'].includes(event.tech);
-    source.buffer = tone.sound;
-    source.playbackRate.value = tone.rate;
-    gain.gain.value = soft ? 0.55 : 0.85;
-    source.connect(gain).connect(master);
+    const velocity = soft ? 0.55 : 0.85;
+    source.buffer = stringBuffer(midi);
+    filter.type = 'lowpass';
+    filter.frequency.value = 1800 + velocity * 5200;
+    gain.gain.value = velocity * 0.8;
+    if (soft) {
+      gain.gain.setValueAtTime(0, time);
+      gain.gain.linearRampToValueAtTime(velocity * 0.8, time + 0.006);
+    }
+    source.connect(filter).connect(gain).connect(master);
     let vibrato, depth;
     if (event.tech === 'slide' || event.tech === 'slide in') {
       // The approach mark before fret 10 gives direction only.
@@ -337,6 +383,7 @@ details[open] summary { margin-bottom: 10px; }
         depth.disconnect();
       }
       source.disconnect();
+      filter.disconnect();
       gain.disconnect();
     };
     source.start(time, soft ? 0.012 : 0);
@@ -443,9 +490,16 @@ details[open] summary { margin-bottom: 10px; }
       master = ctx.createGain();
       master.gain.value = 0.5;
       master.connect(ctx.destination);
+      // Build one uncached pitch per scheduler tick, starting during the count-in.
+      const pitches = score.bars.slice(first, last + 1).flatMap(steps =>
+        steps.flatMap(event => event.notes.map(([, midi]) => midi)));
+      const toWarm = [...new Set(pitches)].filter(midi => !buffers.has(midi));
       run.time = ctx.currentTime + 0.07;
       pump();
-      timer = setInterval(pump, 25);
+      timer = setInterval(() => {
+        pump();
+        if (toWarm.length) stringBuffer(toWarm.shift());
+      }, 25);
       frame = requestAnimationFrame(draw);
     } catch (error) {
       if (run === session) {

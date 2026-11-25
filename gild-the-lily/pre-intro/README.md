@@ -18,6 +18,10 @@ Choose the whole score, a passage, or either original pre-intro phrase in
 the Loop menu. Tap a bar to repeat it and tap it again to return to all 69.
 The cursor follows the sounding part and brings each row into view.
 
+The guitar uses Woodshed’s steel-string sound. The fundamental and lower
+overtones sustain while the higher overtones fade quickly. The player gives
+hammer-ons, pull-offs and slides a softer attack. [Original voice in Woodshed](https://github.com/brendansudol/guitar-woodshed/blob/b7265be/js/audio.js)
+
 ## Rebuilding
 
 ```sh
