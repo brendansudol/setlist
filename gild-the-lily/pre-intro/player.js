@@ -223,6 +223,14 @@
     if (run) frame = requestAnimationFrame(draw);
   }
 
+  function setAudioSessionType(type) {
+    try {
+      if (navigator.audioSession) navigator.audioSession.type = type;
+    } catch {
+      // Audio session hints are optional. Web Audio can still play without one.
+    }
+  }
+
   async function start() {
     if (!Audio || run) return;
     const session = { bar: first, step: 0, at: 0, time: 0, count: 0 };
@@ -230,6 +238,8 @@
     go.setAttribute('aria-pressed', 'true');
     goText.textContent = 'Stop';
     try {
+      // On iPhone, music playback uses media volume even in Silent Mode.
+      setAudioSessionType('playback');
       if (!ctx) ctx = new Audio();
       await ctx.resume();
       if (run !== session) return;
@@ -274,6 +284,7 @@
     go.setAttribute('aria-pressed', 'false');
     goText.textContent = 'Play';
     position.textContent = '';
+    setAudioSessionType('auto');
   }
 
   function setRange(a, b, jump) {
