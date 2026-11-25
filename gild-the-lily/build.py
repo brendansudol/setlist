@@ -316,10 +316,10 @@ def check():
         assert len(pattern) == 16 and set(pattern) <= set("Ddu."), "a strumming bar is sixteen slots"
 
 
-def sheet_link(label):
-    """A button to the pre-intro practice sheet. Not a timestamp, so the docked
-    player leaves it alone and it opens like any other link."""
-    return f'<a class="watch" href="pre-intro/"><span>{escape(label)} <b>&rarr;</b></span></a>'
+def sheet_link(label, first_bar=None):
+    """Open the full tab or select a passage by its starting bar."""
+    fragment = f"#section-{first_bar}" if first_bar is not None else ""
+    return f'<a class="watch" href="pre-intro/index.html{fragment}"><span>{escape(label)} <b>&rarr;</b></span></a>'
 
 
 def used_in(cid):
@@ -1085,7 +1085,7 @@ def page():
     <div><dt>Tuning</dt><dd>Standard. The lesson does not say so, but the frets it names only make these chords in standard tuning.</dd></div>
     <div><dt>Capo</dt><dd>None</dd></div>
     <div><dt>To learn</dt><dd>Nine chords, plus three-note versions of the two hardest</dd></div>
-    <div><dt>Lead guitar</dt><dd>Play B-RoM’s <a href="pre-intro/">69-bar guitar tab</a>, or follow the fretboard map below for Part 1.</dd></div>
+    <div><dt>Lead guitar</dt><dd>{sheet_link("Play the 69-bar tab")}</dd></div>
   </dl>
 </header>
 
@@ -1093,21 +1093,21 @@ def page():
   <h2 id="h-map">The song map</h2>
   <p>Four beats to the bar. A narrow box is two beats and a wide box is a whole bar. Tap a box to jump to its shape. Where a box says “or”, the sources disagree, and the note under that section says how.</p>
   <div class="part">
-    <div class="part-head"><h3>Pre-intro</h3>{sheet_link("Tab and player")}</div>
+    <div class="part-head"><h3>Pre-intro</h3>{sheet_link("Practice bars 1–7", 1)}</div>
     {chips(PRE_INTRO)}
-    <p class="note">Seven slow bars before the lick, one chord to the bar, each picked a string at a time. They come from B-RoM's lesson, not the one the rest of this page follows. The <a href="pre-intro/">interactive tab</a> opens with these seven bars and continues through all 69 bars of B-RoM’s arrangement.</p>
+    <p class="note">Seven slow bars before the lick, one chord to the bar, each picked a string at a time. They open B-RoM’s 69-bar lead guitar arrangement.</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Intro lick</h3>{from_part("Intro lick")}</div>
+    <div class="part-head"><h3>Intro lick</h3><div class="linkrow">{from_part("Intro lick")} {sheet_link("Practice bars 8–23", 8)}</div></div>
     <p class="note">A single-note lick that comes round four times, each a little different. It is <a href="#h-lick">mapped pass by pass further down</a>.</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Verse</h3>{from_part("Verse")}</div>
+    <div class="part-head"><h3>Verse</h3><div class="linkrow">{from_part("Verse")} {sheet_link("Practice the verse fills · bars 24–39", 24)}</div></div>
     {chips(VERSE)}
     <p class="note">Two beats a chord, then D for a whole bar, as the lesson counts it. The four bars are played twice. In bar 3 this lesson plays C, while the second lesson and the chord chart both have Am, so two sources out of three say Am. Try both against the record. There are lead lines over the verse on the record; the instructor's advice is to concentrate on the chords, especially if you are the only guitar.</p>
   </div>
   <div class="part">
-    <div class="part-head"><h3>Chorus</h3>{from_part("Chorus")}</div>
+    <div class="part-head"><h3>Chorus</h3><div class="linkrow">{from_part("Chorus")} {sheet_link("Practice bars 40–61", 40)}</div></div>
     {chips(CHORUS)}
     <p class="note">After the first two chords it is one move four times: D and A for two beats each, then a third chord. That chord is Bm twice, then G twice. The last G is cut to two beats so the bass can walk down the low E string, fret 3 to fret 2 to open, and land on Em. The second lesson and the chord chart give the same order and call the walk-down beat a D chord, which with that bass note is D over F#. The lesson counts everything from the first D out loud. It does not count the Bm and F#7 at the start, which are drawn here as a bar each.</p>
   </div>
@@ -1147,7 +1147,7 @@ def page():
   </figure>
   {lick_passes()}
   <p class="readme"><b>If you want the notes written out,</b> other people publish them. Ultimate Guitar has an <a href="https://tabs.ultimate-guitar.com/tab/billy-strings/gild-the-lily-official-5461431">official tab</a> and a <a href="https://tabs.ultimate-guitar.com/tab/billy-strings/gild-the-lily-tabs-5451279">free tab of the intro</a>. <a href="https://youtu.be/T_WD_2jUtdg">Quinn Tuff's lesson</a> comes with a <a href="https://www.soundslice.com/slices/Q3mqc/">tab on Soundslice</a>, and <a href="https://www.youtube.com/watch?v=U9BqvaBOR8Y&amp;t=192s">B-RoM's lesson</a> shows tab on screen from 3:12. They are their authors' transcriptions and were not checked against this lesson.</p>
-  <p class="readme"><b>Play the lick here.</b> B-RoM’s <a href="pre-intro/#section-8">interactive tab</a> follows the intro lick from bar 8. Choose a passage or tap a single bar to loop it at practice speed.</p>
+  <p class="readme"><b>Play the lick here.</b> B-RoM’s <a href="pre-intro/index.html#section-8">interactive tab</a> follows the intro lick from bar 8. Choose a passage or tap a single bar to loop it at practice speed.</p>
   <ul class="points">
     <li>Where two notes in a row sit at the same fret on neighbouring strings, he rolls one fingertip across them instead of lifting it.</li>
     <li>In the low turn he uses the ring finger at fret 7 and the index at fret 5, so the hand stays in one position.</li>
@@ -1163,7 +1163,7 @@ def page():
   <ol class="steps">
     <li>Intro lick, four passes.</li>
     <li>Verse.</li>
-    <li>Chorus. It ends on Em, and a short piece of the intro lick leads back to the top.</li>
+    <li>Chorus. It ends on Em, and a short piece of the intro lick leads back to the top. <a href="pre-intro/index.html#section-62">Practice the return to the lick in bars 62–69.</a></li>
     <li>Intro, verse and chorus again.</li>
     <li>Bridge, then a rest.</li>
     <li>Intro lick twice: once straight through, once stopping early.</li>

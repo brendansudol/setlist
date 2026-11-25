@@ -47,6 +47,11 @@ header { display: grid; gap: 12px; }
 .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; font-size: .8125rem; color: var(--muted); }
 .tags span { border: 1px solid var(--line); border-radius: 99px; padding: 0 8px; line-height: 1.6; }
 .go { font-size: .875rem; font-weight: 700; color: var(--accent); }
+.song-with-player { position: relative; }
+.song-actions { display: flex; flex-wrap: wrap; gap: 0 20px; }
+.song-actions a { display: inline-flex; align-items: center; min-height: 40px; text-underline-offset: .2em; }
+.song-actions .card-link::after { content: ""; position: absolute; inset: 0; border-radius: 8px; }
+.song-actions .player-link { position: relative; }
 footer { font-size: .875rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
 </style>
 </head>
@@ -86,14 +91,15 @@ footer { font-size: .875rem; color: var(--muted); border-top: 1px solid var(--li
         <p class="go">Open the shapes →</p>
       </a>
     </li>
-    <li>
-      <a class="song" href="gild-the-lily/">
-        <h2>Gild the Lily</h2>
-        <p class="by">Billy Strings · from a lesson by William A. Yarbrough</p>
-        <p class="what">Eleven chord shapes for the verse, chorus and bridge, a beat-by-beat map of each section, the strumming, a guide to the intro lick, and the order the whole song runs in.</p>
-        <p class="tags"><span>Rhythm guitar</span><span>Standard tuning</span><span>No capo</span><span>Whole song</span></p>
-        <p class="go">Open the shapes →</p>
-      </a>
+    <li class="song song-with-player">
+      <h2>Gild the Lily</h2>
+      <p class="by">Billy Strings</p>
+      <p class="what">Learn the rhythm parts with William A. Yarbrough’s chord guide, or play and loop B-RoM’s lead guitar arrangement.</p>
+      <p class="tags"><span>Rhythm &amp; lead guitar</span><span>Standard tuning</span><span>No capo</span><span>Whole song</span></p>
+      <div class="song-actions">
+        <a class="go card-link" href="gild-the-lily/index.html">Open the chord guide →</a>
+        <a class="go player-link" href="gild-the-lily/pre-intro/index.html">Play the 69-bar tab →</a>
+      </div>
     </li>
     <li>
       <a class="song" href="banana-pancakes/">
