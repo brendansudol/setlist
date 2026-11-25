@@ -78,16 +78,13 @@ links to tablature other people publish: Ultimate Guitar's official tab and
 its free intro tab, a Soundslice tab that goes with another lesson, and a
 lesson that shows tab on screen.
 
-## The pre-intro practice sheet
+## The interactive practice sheet
 
-A later request added [`pre-intro/`](pre-intro/): seven slow bars that a
-different lesson, B-RoM's, plays before the intro lick, redrawn as tab with a
-player that loops them at any tempo. That sheet does write its notes out,
-because the site's owner asked for it, and
-[its own write-up](pre-intro/README.md) says how it was made. On the main page
-it is the first row of the song map, as seven chord boxes with a button to
-the sheet, and the lick section links to it as well. Everything below is
-about the main page, which still writes no notes out.
+The [practice sheet](pre-intro/) started with the seven slow bars from
+B-RoM’s lesson. It now includes all 69 bars of his *Intro & more* arrangement.
+The song map links to the pre-intro and the lick section links directly to
+bar 8. The [practice sheet write-up](pre-intro/README.md) describes its
+score and player. Everything below concerns the main chord guide.
 
 ## Process
 
@@ -328,7 +325,7 @@ python3 gild-the-lily/build.py
 Standard library only. Edit the data at the top of `build.py`, not
 `index.html`; the next build overwrites the HTML.
 
-## What is not in this repository
+## Material omitted from the main chord guide
 
 - The transcripts and the frames used to confirm the shapes and the
   strumming.

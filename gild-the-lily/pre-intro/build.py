@@ -1,29 +1,13 @@
 #!/usr/bin/env python3
-"""Gild the Lily, the pre-intro: seven bars of tab redrawn as a practice sheet.
-
-The notes were read off the tab that B-RoM's lesson shows on screen from 3:13
-to 3:31. This script holds them as data, checks them, draws every bar as SVG
-and writes index.html next to itself, with a small player that plucks the
-notes at any tempo and loops any bar. Standard library only.
-
-Run:  python3 gild-the-lily/pre-intro/build.py
-"""
+"""Build a standalone interactive practice sheet from B-RoM's 69-bar score."""
 import json
 from html import escape
 from pathlib import Path
 
-VIDEO = {
-    "id": "U9BqvaBOR8Y",
-    "title": 'How to play "Gild The Lily" - Billy Strings - Guitar Lesson with Tab',
-    "by": "B-RoM",
-    "length": 367,
-}
-START, END = 193, 211          # 3:13 to 3:31, the stretch this page covers
-LESSON_BPM = 100               # a rough reading of how fast the lesson's cursor moves
-
+from score import BARS, EIGHTH, PRE_INTRO, QUARTER, SECTIONS, TRIPLET, WHOLE
 
 def yt(t):
-    return f"https://www.youtube.com/watch?v={VIDEO['id']}&t={t}s"
+    return f"https://www.youtube.com/watch?v=U9BqvaBOR8Y&t={t}s"
 
 
 def mmss(t):
@@ -41,61 +25,7 @@ STRINGS = {
     6: ("E", "low E", 40),
 }
 
-# ---------------------------------------------------------------------------
-# The seven bars. Time is counted in eighth notes, eight to the bar.
-#
-# A bar is a list of steps, in order. A step is
-#     (how many eighths it lasts, [(string, fret, note on the staff), ...])
-# with an optional third item: "h" if the step is hammered on from the note
-# before it, "p" if it is pulled off. Those notes are not picked.
-#
-# "note on the staff" is what the lesson's notation shows above the tab. It was
-# read separately from the fret numbers, and check() makes sure the two agree.
-# Guitar music is written an octave above where it sounds.
-# ---------------------------------------------------------------------------
-BARS = [
-    dict(chord="D", at=193, steps=[
-        (2, [(1, 2, "F#5"), (4, 0, "D4")]),
-        (2, [(3, 2, "A4")]),
-        (1, [(1, 2, "F#5"), (4, 0, "D4")]),
-        (3, [(1, 3, "G5")], "h"),
-    ]),
-    dict(chord="Am", at=193, steps=[
-        (2, [(2, 1, "C5"), (5, 0, "A3")]),
-        (2, [(4, 2, "E4")]),
-        (1, [(2, 1, "C5")]),
-        (1, [(3, 2, "A4")]),
-        (2, [(4, 2, "E4")]),
-    ]),
-    dict(chord="G", at=193, steps=[
-        (1, [(3, 2, "A4"), (6, 3, "G3")]),
-        (1, [(3, 4, "B4")]),
-        (2, [(6, 3, "G3")]),
-        (1, [(3, 4, "B4")]),
-        (2, [(3, 2, "A4")], "p"),
-        (1, [(3, 2, "A4")]),
-    ]),
-    dict(chord="D", at=201, steps=[
-        (2, [(4, 0, "D4")]),
-        (2, [(4, 0, "D4")]),
-        (4, [(3, 2, "A4"), (4, 0, "D4")]),
-    ]),
-    dict(chord="D", at=201, steps=[
-        (2, [(4, 0, "D4")]),
-        (2, [(4, 0, "D4")]),
-        (1, [(1, 2, "F#5"), (4, 0, "D4")]),
-        (3, [(1, 3, "G5")], "h"),
-    ]),
-    dict(chord="Am", at=201, steps=[
-        (4, [(2, 1, "C5"), (5, 0, "A3")]),
-        (4, [(2, 1, "C5")]),
-    ]),
-    dict(chord="D", at=208, steps=[
-        (8, [(4, 4, "F#4"), (5, 5, "D4")]),
-    ]),
-]
-
-# What to say about each bar, in the order of BARS.
+# Playing notes for the original seven-bar pre-intro.
 BAR_NOTES = [
     "The open D string under an open D shape. On beat 3, pick fret 2 of the high E and hammer on to fret 3, then let it ring through beat 4.",
     "The open A string under an Am shape. Every fretted note in the bar is already under your fingers if you hold the chord.",
@@ -107,7 +37,7 @@ BAR_NOTES = [
 ]
 
 # Where each line of the lesson's tab comes up on screen.
-LINES = [("Bars 1 to 3", 193), ("Bars 4 to 6", 201), ("Bar 7", 208)]
+LINES = [("Bars 1 to 3", 193), ("Bars 4 to 6", 201), ("Bar 7", 208), ("Main lick", 211)]
 
 NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 COUNT = ["1", "&", "2", "&", "3", "&", "4", "&"]
@@ -123,56 +53,41 @@ def sounding(string, fret):
     return STRINGS[string][2] + fret
 
 
-def unpack(step):
-    dur, notes = step[0], step[1]
-    return dur, notes, (step[2] if len(step) > 2 else None)
+TECHNIQUES = {
+    "hammer": "hammer on", "pull": "pull off", "bend": "bend up a half step",
+    "slide": "slide from the previous fret", "slide in": "slide in from below",
+    "vibrato": "vibrato",
+}
 
 
 def check():
-    assert len(BARS) == len(BAR_NOTES) == 7
+    assert len(BARS) == 69 and len(BAR_NOTES) == len(PRE_INTRO)
+    assert [n for a, b, _ in SECTIONS for n in range(a, b + 1)] == list(range(1, len(BARS) + 1))
+    before = {}
     for n, bar in enumerate(BARS, 1):
-        slot, before, lowest = 0, {}, None
-        for step in bar["steps"]:
-            dur, notes, tech = unpack(step)
-            assert dur >= 1 and notes, f"bar {n}: an empty step"
-            assert len({s for s, _, _ in notes}) == len(notes), f"bar {n}: two notes on one string"
-            for string, fret, written in notes:
-                assert string in STRINGS and 0 <= fret <= 12, f"bar {n}: no such note"
-                # the staff and the tab were read separately and have to agree
-                assert note_name(sounding(string, fret) + 12) == written, (
-                    f"bar {n}: string {string} fret {fret} is written "
-                    f"{note_name(sounding(string, fret) + 12)}, not {written}")
-                pitch = sounding(string, fret)
-                lowest = pitch if lowest is None else min(lowest, pitch)
-            if tech:
-                assert tech in ("h", "p") and len(notes) == 1, f"bar {n}: a slur joins single notes"
-                string, fret, _ = notes[0]
-                assert string in before, f"bar {n}: nothing to slur from on string {string}"
-                assert (fret > before[string]) == (tech == "h") and fret != before[string], (
-                    f"bar {n}: a hammer-on goes up and a pull-off comes down")
-            before = {s: f for s, f, _ in notes}
-            slot += dur
-        assert slot == 8, f"bar {n} is {slot} eighths long, not 8"
-        # the lowest note of every bar is the root of the chord it is labelled with
-        assert NOTE_NAMES[lowest % 12] == bar["chord"].rstrip("m"), f"bar {n}: bass is not {bar['chord']}"
-        assert START <= bar["at"] < END
-    assert [t for _, t in LINES] == sorted({bar["at"] for bar in BARS})
-    assert 0 <= START < END < VIDEO["length"]
+        assert sum(st.ticks for st in bar.steps) == WHOLE, f"bar {n}: wrong duration"
+        assert all(0 < at < WHOLE and name for at, name in bar.changes)
+        for st in bar.steps:
+            assert st.ticks > 0 and (not st.tech or st.tech in TECHNIQUES)
+            assert st.pick in ("", "down", "up")
+            assert st.notes or not (st.tech or st.pick), f"bar {n}: marking on a rest"
+            frets = {s: f for s, f, _ in st.notes}
+            assert len(frets) == len(st.notes), f"bar {n}: two notes on one string"
+            for string, fret, written in st.notes:
+                assert string in STRINGS and 0 <= fret <= 24
+                assert note_name(sounding(string, fret) + 12) == written, f"bar {n}: {written} at {string}/{fret}"
+            if st.tech in ("hammer", "pull", "slide"):
+                string, fret, _ = st.notes[0]
+                assert string in before and before[string] != fret, f"bar {n}: disconnected slur"
+                if st.tech != "slide":
+                    assert (fret > before[string]) == (st.tech == "hammer")
+            before = frets
 
 
-# ---------------------------------------------------------------------------
-# Drawing. One SVG per bar, all the same size, so the bars can sit four to a
-# row on a wide window and two to a row on a phone.
-# ---------------------------------------------------------------------------
-W, H = 190, 154
-X0, STEP = 27, 19.5            # x of the first eighth, and the gap to the next
-Y0, GAP = 50, 15               # y of the high E string, and the gap to the next
-PILL_H, PILL_LEAD = 13, 7      # the tail behind each number; the number sits 7 in
-COUNT_Y = 147
-
-
-def x_of(slot):
-    return X0 + slot * STEP
+W, H = 270, 161
+X0, X_END = 30, 261
+Y0, GAP = 52, 15
+COUNT_Y = 155
 
 
 def y_of(string):
@@ -183,80 +98,116 @@ def num(v):
     return f"{v:.2f}".rstrip("0").rstrip(".")
 
 
-def bar_svg(i, bar):
+def timeline(bar, previous):
+    # Guarantee space for two-digit frets even in the thirty-second-note slide.
+    widths = [max(20, st.ticks * (X_END - X0) / WHOLE) for st in bar.steps]
+    scale = (X_END - X0) / sum(widths)
+    events, at, x = [], 0, X0
+    for st, width in zip(bar.steps, widths):
+        end = x + width * scale
+        event = dict(at=at, dur=st.ticks, x=round(x, 2), endX=round(end, 2),
+                     notes=[[s, sounding(s, f)] for s, f, _ in st.notes])
+        if st.tech:
+            event["tech"] = st.tech
+        if st.tech == "slide":
+            string, fret, _ = st.notes[0]
+            event["slideOffset"] = next(f - fret for s, f, _ in previous.notes if s == string)
+        events.append(event)
+        at, x, previous = at + st.ticks, end, st
+    return events
+
+
+def x_at(events, tick):
+    for e in events:
+        if e["at"] <= tick < e["at"] + e["dur"]:
+            return e["x"] + (e["endX"] - e["x"]) * (tick - e["at"]) / e["dur"]
+    return X_END
+
+
+def bar_svg(i, bar, events):
     o = [f'<svg viewBox="0 0 {W} {H}" aria-hidden="true" focusable="false">']
-    for beat in range(4):                       # faint guides down from each beat
-        x = num(x_of(beat * 2))
-        o.append(f'<line class="guide" x1="{x}" y1="{Y0 - 8}" x2="{x}" y2="{COUNT_Y - 10}"/>')
-    for s in STRINGS:
-        o.append(f'<line class="sl" x1="0" y1="{y_of(s)}" x2="{W}" y2="{y_of(s)}"/>')
-    for x in (0.6, W - 0.6):
+    for beat in range(4):
+        x = num(x_at(events, beat * QUARTER))
+        o.append(f'<line class="guide" x1="{x}" y1="43" x2="{x}" y2="144"/>')
+    for s, (label, _, _) in STRINGS.items():
+        y = y_of(s)
+        o.append(f'<line class="sl" x1="1" y1="{y}" x2="{W - 1}" y2="{y}"/>'
+                 f'<g class="slab"><rect x="3" y="{y-5}" width="12" height="10"/>'
+                 f'<text x="9" y="{y+3}">{label}</text></g>')
+    for x in (1, W - 1):
         o.append(f'<line class="bl" x1="{x}" y1="{Y0}" x2="{x}" y2="{y_of(6)}"/>')
-    o.append('<g class="slab">' + "".join(
-        f'<rect x="4" y="{y_of(s) - 5}" width="10" height="10"/><text x="9" y="{y_of(s) + 3}">{STRINGS[s][0]}</text>'
-        for s in STRINGS) + '</g>')
-    o.append(f'<text class="bn" x="3" y="20">{i + 1}</text>'
-             f'<text class="ch" x="15" y="20">{escape(bar["chord"])}</text>')
+    o.append(f'<text class="bn" x="4" y="19">{i + 1:02}</text>')
+    for tick, chord in ((0, bar.chord), *bar.changes):
+        if chord:
+            o.append(f'<text class="ch" x="{num(x_at(events, tick))}" y="19">{escape(chord)}</text>')
 
-    slot, starts, prev_slot = 0, set(), 0
-    for j, step in enumerate(bar["steps"]):
-        dur, notes, tech = unpack(step)
-        x = x_of(slot)
-        starts.add(slot)
-        if tech:                                # the arc from the note before
-            y = y_of(notes[0][0]) - PILL_H / 2 - 1.5
-            x1, x2 = x_of(prev_slot) + 1, x - 1
-            mid = (x1 + x2) / 2
-            o.append(f'<path class="slur" d="M{num(x1)} {num(y)} Q{num(mid)} {num(y - 9)} {num(x2)} {num(y)}"/>'
-                     f'<text class="tech" x="{num(mid)}" y="{num(y - 7)}">{tech.upper()}</text>')
-        g = [f'<g class="step" data-step="{j}">']
-        for string, fret, _ in notes:
+    for j, (st, e) in enumerate(zip(bar.steps, events)):
+        x, end = e["x"], e["endX"]
+        o.append(f'<g class="step" data-step="{j}">')
+        for string, fret, _ in st.notes:
             y = y_of(string)
-            g.append(f'<rect class="pill" x="{num(x - PILL_LEAD)}" y="{num(y - PILL_H / 2)}" '
-                     f'width="{num(dur * STEP - 3)}" height="{PILL_H}" rx="{num(PILL_H / 2)}"/>'
-                     f'<text class="fr" x="{num(x)}" y="{num(y + 4.3)}">{fret}</text>')
-        g.append('</g>')
-        o.append("".join(g))
-        prev_slot, slot = slot, slot + dur
+            o.append(f'<rect class="pill" x="{num(x-8)}" y="{num(y-6.5)}" width="{num(end-x-2)}" height="13" rx="6.5"/>'
+                     f'<text class="fr" x="{num(x)}" y="{num(y+4.3)}">{fret}</text>')
+        if not st.notes:
+            label = "4-beat rest" if st.ticks == WHOLE else "rest"
+            o.append(f'<rect class="rest-tail" x="{num(x-8)}" y="83" width="{num(end-x-3)}" height="13" rx="6"/>'
+                     f'<text class="rest-label" x="{num((x+end)/2-9)}" y="92.5">{label}</text>')
+        if st.tech in ("hammer", "pull"):
+            y = y_of(st.notes[0][0]) - 8
+            x1, x2 = events[j-1]["x"] + 1, x - 1
+            mid = (x1 + x2) / 2
+            o.append(f'<path class="slur" d="M{num(x1)} {y} Q{num(mid)} {y-9} {num(x2)} {y}"/>'
+                     f'<text class="tech" x="{num(mid)}" y="{y-6}">{st.tech[0].upper()}</text>')
+        elif st.tech:
+            if st.tech == "slide":
+                fret = st.notes[0][1]
+                arrow = "↗" if e["slideOffset"] < 0 else "↘"
+                mark = f'{fret + e["slideOffset"]}{arrow}{fret}'
+            else:
+                mark = {"slide in": "sl. ↗", "vibrato": "vib.", "bend": "½ bend"}[st.tech]
+            o.append(f'<text class="tech" x="{num(x)}" y="35">{mark}</text>')
+        if st.pick:
+            path = "M-3 3v-6h6v6" if st.pick == "down" else "M-3 -3l3 6 3-6"
+            o.append(f'<path class="pick" transform="translate({num(x)} 139)" d="{path}"/>')
+        o.append('</g>')
 
-    for k, label in enumerate(COUNT):
-        cls = "cnt hit" if k in starts else "cnt"
-        o.append(f'<text class="{cls}" x="{num(x_of(k))}" y="{COUNT_Y}">{escape(label)}</text>')
-    o.append(f'<line class="cursor" x1="{X0}" y1="{Y0 - 9}" x2="{X0}" y2="{y_of(6) + 9}"/>')
-    o.append('</svg>')
+    hits = {e["at"] for e in events if e["notes"]}
+    counts = [(k * EIGHTH, label) for k, label in enumerate(COUNT)]
+    for st, e in zip(bar.steps, events):
+        if st.ticks == TRIPLET and e["at"] % QUARTER == 0:
+            at = e["at"]
+            counts.remove((at + EIGHTH, "&"))
+            counts.extend([(at + TRIPLET, "trip"), (at + 2 * TRIPLET, "let")])
+    for tick, label in sorted(counts):
+        cls = "cnt hit" if tick in hits else "cnt"
+        o.append(f'<text class="{cls}" x="{num(x_at(events,tick))}" y="{COUNT_Y}">{escape(label)}</text>')
+    o.append(f'<line class="cursor" x1="{X0}" y1="42" x2="{X0}" y2="132"/></svg>')
     return "".join(o)
 
 
-def bar_words(i, bar):
-    """The bar in words, for anyone who is not looking at the drawing."""
-    parts, slot = [], 0
-    for step in bar["steps"]:
-        dur, notes, tech = unpack(step)
-        what = " with ".join(
-            f"{STRINGS[s][1]} string {'open' if f == 0 else f'fret {f}'}" for s, f, _ in notes)
-        how = {"h": "hammer on to ", "p": "pull off to ", None: ""}[tech]
-        parts.append(f"{COUNT_SPOKEN[slot].capitalize()}: {how}{what}.")
-        slot += dur
-    return f"Bar {i + 1}, {bar['chord']}. " + " ".join(parts)
+def count_spoken(at):
+    if at % EIGHTH == 0:
+        return COUNT_SPOKEN[at // EIGHTH]
+    beat, offset = divmod(at, QUARTER)
+    if offset in (TRIPLET, 2 * TRIPLET):
+        return f"triplet {offset // TRIPLET + 1} of beat {beat + 1}"
+    return f"a thirty-second after beat {beat + 1}"
 
 
-def bar_button(i, bar):
+def bar_button(i, bar, events):
+    parts = [f"Bar {i+1}. " + (bar.chord + "." if bar.chord else "")]
+    for tick, chord in bar.changes:
+        parts.append(f"{chord} on {count_spoken(tick)}.")
+    for st, e in zip(bar.steps, events):
+        notes = " with ".join(f"{STRINGS[s][1]} string {'open' if f == 0 else f'fret {f}'}"
+                              for s, f, _ in st.notes)
+        markings = [TECHNIQUES[st.tech]] if st.tech else []
+        if st.pick:
+            markings.append(st.pick + "stroke")
+        parts.append(", ".join([count_spoken(e["at"]).capitalize(), notes or "rest", *markings]) + ".")
     return (f'<button type="button" class="bar" data-bar="{i}" aria-pressed="false" '
-            f'aria-label="Loop bar {i + 1}" aria-describedby="bar-words-{i}">{bar_svg(i, bar)}'
-            f'<span class="sr" id="bar-words-{i}">{escape(bar_words(i, bar))}</span></button>')
-
-
-def player_data():
-    bars = []
-    for bar in BARS:
-        steps, slot = [], 0
-        for step in bar["steps"]:
-            dur, notes, tech = unpack(step)
-            steps.append({"slot": slot, "dur": dur, "soft": bool(tech),
-                          "notes": [[s, sounding(s, f)] for s, f, _ in notes]})
-            slot += dur
-        bars.append(steps)
-    return {"x0": X0, "step": STEP, "bars": bars}
+            f'aria-label="Loop bar {i+1}" aria-describedby="bar-words-{i}">{bar_svg(i, bar, events)}'
+            f'<span class="sr" id="bar-words-{i}">{escape(" ".join(parts))}</span></button>')
 
 
 PLAY_ICON = '<svg class="ico ico-play" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 1l9 5-9 5z"/></svg>'
@@ -264,8 +215,6 @@ STOP_ICON = '<svg class="ico ico-stop" viewBox="0 0 12 12" aria-hidden="true"><r
 
 CSS = r"""
 :root {
-  /* Same paper, ink and type as the other pages. Green is the colour those pages give
-     open chords, and every chord here is one; it also marks the note being played. */
   --bg: #eef1f4;
   --surface: #ffffff;
   --ink: #16202b;
@@ -294,13 +243,13 @@ CSS = r"""
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 400 16px/1.5 var(--font-body); }
-main { max-width: 920px; margin: 0 auto; padding: 24px 16px 56px; display: grid; gap: 36px; }
+main { max-width: 1024px; margin: 0 auto; padding: 24px 16px 56px; display: grid; gap: 36px; }
 h1, h2 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.1; }
 h1 { font-size: clamp(1.75rem, 7vw, 2.5rem); font-weight: 800; letter-spacing: -0.02em; }
 h2 { font-size: 1.375rem; font-weight: 700; letter-spacing: -0.01em; }
 p { margin: 0; max-width: 62ch; }
 a { color: inherit; }
-a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid var(--open); outline-offset: 2px; border-radius: 4px; }
+:is(a, button, input, select, summary):focus-visible { outline: 3px solid var(--open); outline-offset: 2px; border-radius: 4px; }
 section { display: grid; gap: 14px; }
 header.top { display: grid; gap: 10px; }
 .eyebrow { font-size: .8125rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
@@ -308,47 +257,42 @@ header.top { display: grid; gap: 10px; }
 .note { font-size: .9375rem; color: var(--muted); }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-/* the tab: two bars to a row on a phone, four on anything wider */
-.sheet { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 6px 10px; }
-.tab { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 8px; }
+.passage { display: block; min-width: 0; padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.passage-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 0 2px 12px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
+.passage-head h2 { font-size: 1.15rem; }
+.passage-head span, .meta { color: var(--muted); font-size: .875rem; font-variant-numeric: tabular-nums; }
+.tab { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); row-gap: 10px; }
 .bar { position: relative; display: block; width: 100%; margin: 0; padding: 0; border: 0; border-radius: 6px; background: none; color: inherit; font: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: opacity .15s; }
 .bar svg { display: block; width: 100%; height: auto; }
-.bar.out { opacity: .32; }          /* outside the part being looped */
-.bar.now { background: var(--wash); }
+.bar.out { opacity: .62; }          /* outside the part being looped */
+.bar.now, .bar[aria-pressed="true"], .bar:hover { background: var(--wash); }
+.bar[aria-pressed="true"] { box-shadow: inset 0 0 0 1.5px var(--open); }
 svg text { font-family: var(--font-body); }
 .sl { stroke: var(--ink); stroke-width: 1; opacity: .3; }
 .bl { stroke: var(--ink); stroke-width: 1.2; opacity: .55; }
 .guide { stroke: var(--ink); stroke-width: 1; opacity: .07; }
-.bn { fill: var(--muted); font-size: 9px; font-variant-numeric: tabular-nums; }
+.bn { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .ch { fill: var(--open); font-family: var(--font-display); font-size: 15px; font-weight: 800; }
 .pill { fill: var(--pill); }
-.fr { fill: var(--ink); font-size: 12.5px; font-weight: 700; text-anchor: middle; font-variant-numeric: tabular-nums; }
+.fr { fill: var(--ink); font-size: 13px; font-weight: 700; text-anchor: middle; font-variant-numeric: tabular-nums; }
 .step.on .pill { fill: var(--open); }
 .step.on .fr { fill: var(--on-dot); }
 .slur { fill: none; stroke: var(--ink); stroke-width: 1.3; stroke-linecap: round; }
 .tech { fill: var(--ink); font-size: 8px; font-weight: 700; text-anchor: middle; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
-.cnt { fill: var(--muted); font-size: 9.5px; text-anchor: middle; opacity: .55; }
+.cnt { fill: var(--muted); font-size: 9.5px; text-anchor: middle; }
 .cnt.hit { fill: var(--ink); font-weight: 700; opacity: 1; }
 .cursor { stroke: var(--open); stroke-width: 2; stroke-linecap: round; opacity: 0; }
 .bar.now .cursor { opacity: .9; }
-/* string names: only on the bar that starts a row */
-.slab { display: none; }
 .slab rect { fill: var(--surface); }
 .slab text { fill: var(--muted); font-size: 8px; font-weight: 700; text-anchor: middle; }
-.tab > :nth-child(2n+1) .slab { display: inline; }
-.next { display: grid; align-content: center; gap: 2px; margin: 10px 6px; padding: 10px 12px; border: 1.5px dashed var(--line); border-radius: 8px; text-decoration: none; font-size: .875rem; color: var(--muted); }
-.next b { font-family: var(--font-display); font-size: 1rem; color: var(--ink); }
-.next:hover { border-color: var(--ink); }
-@media (min-width: 720px) {
-  .sheet { padding: 16px 12px 12px; }
-  .tab { grid-template-columns: repeat(4, minmax(0, 1fr)); row-gap: 14px; }
-  .tab > :nth-child(2n+1) .slab { display: none; }
-  .tab > :nth-child(4n+1) .slab { display: inline; }
-}
+.pick { stroke: var(--muted); stroke-width: 1.3; fill: none; }
+.rest-tail { fill: var(--surface); stroke: var(--line); stroke-dasharray: 3 2; }
+.rest-label { fill: var(--muted); font-size: 8.5px; text-anchor: middle; }
+.step.on .rest-tail { stroke: var(--open); }
+.step.on .rest-label { fill: var(--open); }
 
-/* the player's controls stay at the bottom of the window while the tab is on screen */
-.practice { gap: 10px; }
-.controls { position: sticky; bottom: 8px; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 6px 20px rgb(0 0 0 / .12); }
+.practice { display: grid; gap: 16px; }
+.controls { position: sticky; top: 6px; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 4px 14px rgb(0 0 0 / .10); }
 .pbtn { flex: none; display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 44px; min-height: 40px; padding: 0 13px; border: 1px solid var(--line); border-radius: 99px; background: transparent; color: var(--ink); font: 700 .8125rem/1 var(--font-body); font-variant-numeric: tabular-nums; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .pbtn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 .go { min-width: 92px; min-height: 44px; background: var(--ink); border-color: var(--ink); color: var(--bg); font-size: .9375rem; }
@@ -358,7 +302,12 @@ svg text { font-family: var(--font-body); }
 .tempo { flex: 1 1 190px; display: flex; align-items: center; gap: 8px; min-height: 40px; font-size: .8125rem; font-weight: 700; color: var(--muted); }
 .tempo input { flex: 1 1 0; min-width: 0; accent-color: var(--open); }
 .tempo output { min-width: 4.6em; color: var(--ink); font-variant-numeric: tabular-nums; }
-.ranges { display: flex; gap: 6px; }
+.range { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: .8125rem; font-weight: 700; }
+.range select { min-height: 38px; max-width: 100%; border: 1px solid var(--line); border-radius: 6px; padding: 0 6px; background: var(--surface); color: var(--ink); font: inherit; }
+.position { color: var(--muted); min-width: 6em; font-size: .8125rem; font-variant-numeric: tabular-nums; text-align: right; }
+details { color: var(--muted); font-size: .9375rem; }
+summary { color: var(--ink); font-weight: 700; cursor: pointer; width: fit-content; }
+details[open] summary { margin-bottom: 10px; }
 .click { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; font-size: .8125rem; font-weight: 700; color: var(--muted); cursor: pointer; }
 .click input { width: 18px; height: 18px; margin: 0; accent-color: var(--open); }
 
@@ -374,196 +323,53 @@ svg text { font-family: var(--font-body); }
 .watch { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 6px 14px 6px 12px; border-radius: 99px; background: var(--ink); color: var(--bg); text-decoration: none; font-size: .875rem; }
 .watch b { font-variant-numeric: tabular-nums; }
 .source { font-size: .875rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 8px; }
+@media (max-width: 820px) {
+  .tab { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .position { min-width: 0; }
+}
+@media (max-width: 580px) {
+  main { padding: 18px 12px 38px; gap: 22px; }
+  .tab { grid-template-columns: 1fr; }
+  .controls { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 8px; }
+  .tempo { grid-column: span 2; }
+  .range { grid-column: span 2; justify-self: start; }
+  .position { display: none; }
+  .passage { padding: 11px; }
+}
 @media print {
   body { background: #fff; }
-  .controls, .linkrow, .next, .hint { display: none; }
-  .sheet { border: 0; padding: 0; }
+  .controls, .linkrow, .hint { display: none; }
+  .bar.out { opacity: 1; }
+  .tab { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .bar { break-inside: avoid; }
+  .passage-head { break-after: avoid; }
 }
-"""
-
-# The player. It plucks a simple synthesised string (Karplus-Strong) for every
-# note, a step at a time, a little ahead of the clock, so a change of tempo is
-# heard on the very next note.
-JS = r"""
-(function () {
-  var DATA = __DATA__;
-  var AC = window.AudioContext || window.webkitAudioContext;
-  var bars = [].slice.call(document.querySelectorAll('.bar'));
-  var go = document.getElementById('go'), goText = document.getElementById('go-text');
-  var tempo = document.getElementById('tempo'), tempoOut = document.getElementById('tempo-out');
-  var clickBox = document.getElementById('click');
-  var rangeBtns = [].slice.call(document.querySelectorAll('[data-from]'));
-  var LAST = DATA.bars.length - 1;
-
-  var ctx = null, master = null, bufs = {};
-  var playing = false, timer = 0, raf = 0;
-  var range = [0, LAST];
-  var next = null;        // the step to schedule next: {bar, step, time}
-  var queue = [];         // steps already scheduled: {t0, t1, bar, slot, dur, el, on}
-  var ringing = {};       // string number -> the note sounding on it
-
-  function eighth() { return 30 / Number(tempo.value); }
-
-  function buffer(midi) {
-    if (bufs[midi]) return bufs[midi];
-    var sr = ctx.sampleRate, f = 440 * Math.pow(2, (midi - 69) / 12);
-    var n = Math.max(2, Math.round(sr / f - 0.5)), len = Math.floor(sr * 3.2);
-    var b = ctx.createBuffer(1, len, sr), d = b.getChannelData(0), i, prev = 0;
-    for (i = 0; i < n; i++) { prev = d[i] = 0.55 * (Math.random() * 2 - 1) + 0.45 * prev; }
-    d[n] = 0.5 * d[0];
-    for (i = n + 1; i < len; i++) { d[i] = 0.998 * 0.5 * (d[i - n] + d[i - n - 1]); }
-    var fade = Math.floor(sr * 0.15);
-    for (i = 0; i < fade; i++) { d[len - 1 - i] *= i / fade; }
-    bufs[midi] = b;
-    return b;
-  }
-
-  function pluck(string, midi, t, soft) {
-    var old = ringing[string];
-    if (old) { old.gain.gain.setTargetAtTime(0, t, 0.012); old.src.stop(t + 0.25); }
-    var src = ctx.createBufferSource(), gain = ctx.createGain();
-    src.buffer = buffer(midi);
-    gain.gain.value = soft ? 0.5 : 0.85;
-    src.connect(gain); gain.connect(master);
-    src.start(t, soft ? 0.012 : 0);       // a hammer-on or pull-off has no pick attack
-    ringing[string] = { src: src, gain: gain };
-  }
-
-  function tick(t, first) {
-    var osc = ctx.createOscillator(), gain = ctx.createGain();
-    osc.frequency.value = first ? 1568 : 1047;
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.exponentialRampToValueAtTime(first ? 0.5 : 0.32, t + 0.002);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
-    osc.connect(gain); gain.connect(master);
-    osc.start(t); osc.stop(t + 0.08);
-  }
-
-  function pump() {
-    var horizon = ctx.currentTime + 0.18;
-    while (playing && next.time < horizon) {
-      var steps = DATA.bars[next.bar], st = steps[next.step], e = eighth(), k;
-      for (k = 0; k < st.notes.length; k++) pluck(st.notes[k][0], st.notes[k][1], next.time, st.soft);
-      if (clickBox.checked) {
-        for (k = st.slot; k < st.slot + st.dur; k++) if (k % 2 === 0) tick(next.time + (k - st.slot) * e, k === 0);
-      }
-      queue.push({ t0: next.time, t1: next.time + st.dur * e, bar: next.bar, slot: st.slot, dur: st.dur,
-                   el: bars[next.bar].querySelectorAll('.step')[next.step], on: false });
-      next.time += st.dur * e;
-      if (++next.step >= steps.length) { next.step = 0; next.bar = next.bar >= range[1] ? range[0] : next.bar + 1; }
-    }
-  }
-
-  function draw() {
-    var now = ctx.currentTime, i, q, cur = null;
-    for (i = queue.length - 1; i >= 0; i--) {
-      if (now >= queue[i].t1) { queue[i].el.classList.remove('on'); queue.splice(i, 1); }
-    }
-    for (i = 0; i < queue.length; i++) {
-      q = queue[i];
-      if (now >= q.t0) { cur = q; if (!q.on) { q.on = true; q.el.classList.add('on'); } }
-    }
-    bars.forEach(function (b, n) { b.classList.toggle('now', !!cur && cur.bar === n); });
-    if (cur) {
-      var x = DATA.x0 + (cur.slot + cur.dur * (now - cur.t0) / (cur.t1 - cur.t0)) * DATA.step;
-      var line = bars[cur.bar].querySelector('.cursor');
-      line.setAttribute('x1', x.toFixed(1)); line.setAttribute('x2', x.toFixed(1));
-    }
-    if (playing) raf = requestAnimationFrame(draw);
-  }
-
-  function start() {
-    if (!AC) return;
-    if (!ctx) {
-      ctx = new AC();
-      master = ctx.createGain(); master.gain.value = 0.5; master.connect(ctx.destination);
-    }
-    ctx.resume();
-    playing = true;
-    go.setAttribute('aria-pressed', 'true'); goText.textContent = 'Stop';
-    var t = ctx.currentTime + 0.12, e = eighth();
-    for (var i = 0; i < 4; i++) tick(t + i * 2 * e, i === 0);      // one bar counted in
-    next = { bar: range[0], step: 0, time: t + 8 * e };
-    timer = setInterval(pump, 25); pump();
-    raf = requestAnimationFrame(draw);
-  }
-
-  function stop() {
-    playing = false;
-    clearInterval(timer); cancelAnimationFrame(raf);
-    go.setAttribute('aria-pressed', 'false'); goText.textContent = 'Play';
-    if (ctx) {
-      var t = ctx.currentTime;
-      Object.keys(ringing).forEach(function (s) {
-        ringing[s].gain.gain.cancelScheduledValues(t);
-        ringing[s].gain.gain.setTargetAtTime(0, t, 0.03);
-        try { ringing[s].src.stop(t + 0.3); } catch (err) {}
-      });
-      // notes and clicks already handed to the clock for the next instant are cut with the rest
-      master.gain.cancelScheduledValues(t);
-      master.gain.setTargetAtTime(0, t, 0.02);
-      var old = master;
-      master = ctx.createGain(); master.gain.value = 0.5; master.connect(ctx.destination);
-      setTimeout(function () { old.disconnect(); }, 400);
-    }
-    ringing = {};
-    queue.forEach(function (q) { q.el.classList.remove('on'); });
-    queue = [];
-    bars.forEach(function (b) { b.classList.remove('now'); });
-  }
-
-  function setRange(a, b) {
-    range = [a, b];
-    var whole = a === 0 && b === LAST;
-    bars.forEach(function (el, n) {
-      el.classList.toggle('out', n < a || n > b);
-      el.setAttribute('aria-pressed', String(!whole && a === b && n === a));
-    });
-    rangeBtns.forEach(function (btn) {
-      btn.setAttribute('aria-pressed', String(Number(btn.dataset.from) === a && Number(btn.dataset.to) === b));
-    });
-    if (playing) { stop(); start(); }
-  }
-
-  go.addEventListener('click', function () { if (playing) stop(); else start(); });
-  tempo.addEventListener('input', function () { tempoOut.textContent = tempo.value + ' bpm'; });
-  rangeBtns.forEach(function (btn) {
-    btn.addEventListener('click', function () { setRange(Number(btn.dataset.from), Number(btn.dataset.to)); });
-  });
-  bars.forEach(function (el, n) {
-    el.addEventListener('click', function () {
-      if (range[0] === n && range[1] === n) setRange(0, LAST); else setRange(n, n);
-    });
-  });
-  document.addEventListener('keydown', function (e) {
-    if (e.key !== ' ' || e.metaKey || e.ctrlKey || e.altKey) return;
-    var t = e.target.tagName;
-    if (t === 'BUTTON' || t === 'INPUT' || t === 'A' || t === 'TEXTAREA') return;
-    e.preventDefault();
-    if (playing) stop(); else start();
-  });
-  document.addEventListener('visibilitychange', function () { if (document.hidden && playing) stop(); });
-  if (!AC) { go.disabled = true; goText.textContent = 'No sound here'; }
-})();
 """
 
 
 def page():
-    bars = "".join(bar_button(i, bar) for i, bar in enumerate(BARS))
+    timelines = [timeline(bar, BARS[i-1].steps[-1] if i else None) for i, bar in enumerate(BARS)]
+    passages, options = [], []
+    for start, end, title in SECTIONS:
+        bars = "\n".join(bar_button(i, BARS[i], timelines[i]) for i in range(start-1, end))
+        passages.append(f'<section class="passage" aria-labelledby="section-{start}"><div class="passage-head">'
+                        f'<h2 id="section-{start}">{title}</h2><span>Bars {start}–{end}</span></div>'
+                        f'<div class="tab">{bars}</div></section>')
+        options.append(f'<option value="{start}-{end}" data-anchor="section-{start}">{title} · {start}–{end}</option>')
     notes = "".join(
-        f'<li><span class="n">Bar {i + 1}</span><span class="c">{escape(bar["chord"])}</span><span>{escape(text)}</span></li>'
-        for i, (bar, text) in enumerate(zip(BARS, BAR_NOTES)))
+        f'<li><span class="n">Bar {i+1}</span><span class="c">{bar.chord}</span><span>{escape(text)}</span></li>'
+        for i, (bar, text) in enumerate(zip(PRE_INTRO, BAR_NOTES)))
     links = "".join(
-        f'<a class="watch" href="{yt(t)}">{PLAY_ICON}<span>{escape(label)} at <b>{mmss(t)}</b></span></a>'
+        f'<a class="watch" href="{yt(t).replace("&", "&amp;")}">{PLAY_ICON}<span>{label} at <b>{mmss(t)}</b></span></a>'
         for label, t in LINES)
-    chords = ", ".join(bar["chord"] for bar in BARS)
-    js = JS.replace("__DATA__", json.dumps(player_data(), separators=(",", ":")))
+    js = Path(__file__).with_name("player.js").read_text(encoding="utf-8")
+    payload = json.dumps(dict(beat=QUARTER, preIntroBars=len(PRE_INTRO), bars=timelines), separators=(",", ":"))
     return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gild the Lily: the pre-intro</title>
+<title>Gild the Lily · Interactive guitar tab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;family=Bricolage+Grotesque:opsz,wght@12..96,600..800&amp;display=swap" rel="stylesheet">
@@ -571,65 +377,52 @@ def page():
 </head>
 <body>
 <main>
-
 <header class="top">
-  <p class="eyebrow"><a href="../">Gild the Lily</a> &middot; practice sheet</p>
-  <h1>The pre-intro, all seven bars</h1>
-  <p class="lede">The slow figure that comes before the main lick, redrawn from the tab on screen in B-RoM's lesson between {mmss(START)} and {mmss(END)}. One bar per chord: {chords}.</p>
+  <p class="eyebrow"><a href="../index.html">Chord guide</a> &middot; Guitar practice sheet</p>
+  <h1>Gild the Lily</h1>
+  <p class="lede">Billy Strings &middot; <i>Intro &amp; more</i>, arranged and tabbed by B-RoM</p>
+  <p class="meta">{len(BARS)} bars &middot; Standard tuning &middot; 4/4</p>
 </header>
 
-<section class="practice" aria-labelledby="h-tab">
-  <h2 id="h-tab" class="sr">The tab</h2>
-  <div class="sheet">
-    <div class="tab">
-      {bars}
-      <a class="next" href="{yt(END)}"><b>Next: the main lick</b><span>The lesson's tab carries on from {mmss(END)}.</span></a>
-    </div>
-  </div>
+<div class="practice" role="region" aria-label="Interactive tablature">
+  <p class="note hint">Choose a passage or tap a bar to loop it. Tap the same bar again for the full score. Play starts with a four-beat count-in.</p>
   <div class="controls" role="group" aria-label="Play the tab">
     <button type="button" class="pbtn go" id="go" aria-pressed="false">{PLAY_ICON}{STOP_ICON}<span id="go-text">Play</span></button>
     <label class="tempo"><span>Tempo</span><input type="range" id="tempo" min="40" max="130" step="1" value="72"><output id="tempo-out" for="tempo">72 bpm</output></label>
-    <div class="ranges" role="group" aria-label="What to loop">
-      <button type="button" class="pbtn" data-from="0" data-to="6" aria-pressed="true">All</button>
-      <button type="button" class="pbtn" data-from="0" data-to="2" aria-pressed="false">1&ndash;3</button>
-      <button type="button" class="pbtn" data-from="3" data-to="6" aria-pressed="false">4&ndash;7</button>
-    </div>
+    <label class="range">Loop <select id="loop"><option value="1-{len(BARS)}">All {len(BARS)} bars</option>
+      <optgroup label="Passages">{"".join(options)}</optgroup>
+      <optgroup label="Pre-intro phrases"><option value="1-3">Bars 1–3</option><option value="4-7">Bars 4–7</option></optgroup>
+    </select></label>
     <label class="click"><input type="checkbox" id="click" checked>Click</label>
+    <span class="position" id="position"></span>
   </div>
-  <p class="note hint">Play counts one bar in, then loops until you stop it. Tap a bar to loop just that bar, and tap it again for the whole thing. The lesson plays this at roughly {LESSON_BPM} bpm; start slower. No sound on an iPhone usually means the silent switch is on.</p>
-</section>
+  {"".join(passages)}
+</div>
 
 <section aria-labelledby="h-read">
-  <h2 id="h-read">How to read it</h2>
+  <h2 id="h-read">Reading the tab</h2>
   <dl class="facts">
-    <div><dt>Lines</dt><dd>Six strings, high E at the top, low E at the bottom</dd></div>
-    <div><dt>Numbers</dt><dd>Frets. 0 is the open string.</dd></div>
-    <div><dt>Grey tails</dt><dd>How long each note lasts. Let it ring to the end of its tail.</dd></div>
-    <div><dt>H and P</dt><dd>Hammer-on and pull-off. The second note is not picked.</dd></div>
-    <div><dt>Underneath</dt><dd>The count, in eighths. Bold where a note starts.</dd></div>
-    <div><dt>Tuning</dt><dd>Standard. The staff above the lesson's tab agrees with these frets.</dd></div>
+    <div><dt>Strings &amp; frets</dt><dd>High E is on top. Numbers are frets. Play stacked numbers together.</dd></div>
+    <div><dt>Timing</dt><dd>The tails show duration. Dashed tails are rests. Count eighths below the staff and three equal notes on beat 3 of bar 38.</dd></div>
+    <div><dt>Picking</dt><dd>Π is a downstroke and V is an upstroke. H means hammer-on and P means pull-off.</dd></div>
+    <div><dt>Expression</dt><dd>An arrow shows a slide. Vib. means vibrato. For a ½ bend, raise the pitch one semitone.</dd></div>
   </dl>
-</section>
-
-<section aria-labelledby="h-bars">
-  <h2 id="h-bars">Bar by bar</h2>
-  <p>It follows the chords of the verse, a bar each, so most of it is a chord shape held down and picked one string at a time.</p>
-  <ol class="bars">{notes}</ol>
-  <p class="note">The chord names and the shapes are a reading of the notes. The lesson's tab does not name a chord over these bars; in every one the lowest note is the root of the chord given here.</p>
+  <p class="note">In bar 39, play fret 12 on the G string for a thirty-second note, then slide to fret 9 for a dotted sixteenth. Land on fret 7 on the “and” of beat 2.</p>
+  <details><summary>Playing notes for the pre-intro</summary><ol class="bars">{notes}</ol>
+    <p class="note">The chord names above bars 1–7 are inferred from the notes. Chord changes from bar 8 onward follow the score.</p>
+  </details>
 </section>
 
 <section aria-labelledby="h-watch">
   <h2 id="h-watch">See it played</h2>
-  <p>The lesson shows its tab a line at a time, with a cursor moving through it.</p>
+  <p>B-RoM’s video lesson shows the pre-intro and the start of the main lick.</p>
   <div class="linkrow">{links}</div>
 </section>
-
 <footer class="source">
-  <p>Source: <a href="{yt(START)}">{escape(VIDEO["title"])}</a> by {escape(VIDEO["by"])} on YouTube, {mmss(START)} to {mmss(END)}. The notes are the lesson's. The drawing, the count, the chord names and the bar-by-bar notes were made for this page.</p>
-  <p>The sound is a synthesised pluck made in the browser, not a recording, and the {LESSON_BPM} bpm figure is an estimate from the speed of the lesson's cursor.</p>
+  <p>Tab from B-RoM’s five-page guitar arrangement of <i>Gild the Lily</i> by Billy Strings. The player synthesizes the written guitar part. Chord names over rests show the harmony.</p>
 </footer>
-
 </main>
+<script id="score-data" type="application/json">{payload}</script>
 <script>{js}</script>
 </body>
 </html>
@@ -638,7 +431,6 @@ def page():
 
 if __name__ == "__main__":
     check()
-    out = Path(__file__).resolve().parent / "index.html"
-    html = page()
-    out.write_text(html, encoding="utf-8")
-    print(f"checked {len(BARS)} bars, wrote {out.name} ({len(html.encode('utf-8'))} bytes)")
+    out = Path(__file__).with_name("index.html")
+    out.write_text(page(), encoding="utf-8")
+    print(f"Checked {len(BARS)} bars and wrote {out.name}.")

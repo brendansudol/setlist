@@ -36,9 +36,11 @@ gild-the-lily/
   index.html            the explainer page, generated
   build.py              the data and the generator for that page
   README.md             source, prompt, process and data for that page
-  pre-intro/            a practice sheet for the seven bars before the intro
+  pre-intro/            the 69-bar B-RoM guitar arrangement and practice player
     index.html          the tab and its player, generated
-    build.py            the notes and the generator for that sheet
+    build.py            validates the score and generates the standalone sheet
+    score.py            the transcribed measures and practice passages
+    player.js           playback and loop controls, inlined during the build
     README.md           source, prompt, process and data for that sheet
 banana-pancakes/
   index.html            the explainer page, generated
@@ -94,6 +96,5 @@ The lessons belong to their instructors; each page links back to its source
 video. The pages contain no video frames or lyrics, and the video is played
 by YouTube's own embedded player. Diagrams are original drawings. One sheet
 writes notes out as TAB:
-[the Gild the Lily pre-intro](gild-the-lily/pre-intro/README.md), seven bars
-redrawn from a lesson's on-screen tab at the site owner's request and
-credited to that lesson.
+[the Gild the Lily practice sheet](gild-the-lily/pre-intro/README.md) covers
+all 69 bars of B-RoM’s guitar arrangement.

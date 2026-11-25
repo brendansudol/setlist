@@ -1085,7 +1085,7 @@ def page():
     <div><dt>Tuning</dt><dd>Standard. The lesson does not say so, but the frets it names only make these chords in standard tuning.</dd></div>
     <div><dt>Capo</dt><dd>None</dd></div>
     <div><dt>To learn</dt><dd>Nine chords, plus three-note versions of the two hardest</dd></div>
-    <div><dt>Not written out</dt><dd>The notes of the intro lick. Part 1 teaches them fret by fret; this page maps the lick and links to each pass.</dd></div>
+    <div><dt>Lead guitar</dt><dd>Play B-RoM’s <a href="pre-intro/">69-bar guitar tab</a>, or follow the fretboard map below for Part 1.</dd></div>
   </dl>
 </header>
 
@@ -1095,7 +1095,7 @@ def page():
   <div class="part">
     <div class="part-head"><h3>Pre-intro</h3>{sheet_link("Tab and player")}</div>
     {chips(PRE_INTRO)}
-    <p class="note">Seven slow bars before the lick, one chord to the bar, each picked a string at a time. They come from B-RoM's lesson, not the one the rest of this page follows. The <a href="pre-intro/">practice sheet</a> has every note as tab, with the count under it and a player that loops any bar at any tempo.</p>
+    <p class="note">Seven slow bars before the lick, one chord to the bar, each picked a string at a time. They come from B-RoM's lesson, not the one the rest of this page follows. The <a href="pre-intro/">interactive tab</a> opens with these seven bars and continues through all 69 bars of B-RoM’s arrangement.</p>
   </div>
   <div class="part">
     <div class="part-head"><h3>Intro lick</h3>{from_part("Intro lick")}</div>
@@ -1147,7 +1147,7 @@ def page():
   </figure>
   {lick_passes()}
   <p class="readme"><b>If you want the notes written out,</b> other people publish them. Ultimate Guitar has an <a href="https://tabs.ultimate-guitar.com/tab/billy-strings/gild-the-lily-official-5461431">official tab</a> and a <a href="https://tabs.ultimate-guitar.com/tab/billy-strings/gild-the-lily-tabs-5451279">free tab of the intro</a>. <a href="https://youtu.be/T_WD_2jUtdg">Quinn Tuff's lesson</a> comes with a <a href="https://www.soundslice.com/slices/Q3mqc/">tab on Soundslice</a>, and <a href="https://www.youtube.com/watch?v=U9BqvaBOR8Y&amp;t=192s">B-RoM's lesson</a> shows tab on screen from 3:12. They are their authors' transcriptions and were not checked against this lesson.</p>
-  <p class="readme"><b>The pre-intro is written out here.</b> The seven slow bars B-RoM's lesson plays before the lick are on <a href="pre-intro/">a practice sheet of their own</a>: the tab with the count under it, and a player that loops any bar at any tempo.</p>
+  <p class="readme"><b>Play the lick here.</b> B-RoM’s <a href="pre-intro/#section-8">interactive tab</a> follows the intro lick from bar 8. Choose a passage or tap a single bar to loop it at practice speed.</p>
   <ul class="points">
     <li>Where two notes in a row sit at the same fret on neighbouring strings, he rolls one fingertip across them instead of lifting it.</li>
     <li>In the low turn he uses the ring finger at fret 7 and the index at fret 5, so the hand stays in one position.</li>
