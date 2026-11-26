@@ -1,0 +1,50 @@
+h1 span { display: block; color: var(--muted); font-size: .55em; margin-top: .3em; }
+h3 { margin: 0; font: 750 1.5rem/1.15 var(--font-display); }
+main a { text-underline-offset: .2em; }
+.section-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 20px; }
+.section-head > a, .drill a, .picked a, .fills a { color: var(--open); font-weight: 700; }
+.map, .pair { display: grid; gap: 12px; }
+.map { grid-template-columns: 1fr 1fr 1.65fr 1.65fr; gap: 1px; overflow: hidden; border: 1px solid var(--line); border-radius: 10px; background: var(--line); }
+.map > div { display: grid; align-content: start; gap: 6px; padding: 14px; background: var(--surface); }
+.map span, .map small { color: var(--muted); font-size: .8rem; }
+.map a { color: var(--open); font: 750 1.12rem/1.25 var(--font-display); }
+.map a:not(:hover) { text-decoration-thickness: 1px; }
+.pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.key { font-size: .9rem; color: var(--muted); }
+.grip, .picked { padding: clamp(14px, 2vw, 22px); border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.grip { display: grid; grid-template-rows: auto 1fr auto; gap: 10px; scroll-margin-top: 16px; }
+.grip:target { outline: 2px solid var(--open); }
+.grip h3 { color: var(--open); }
+.grip-body { display: grid; align-items: center; grid-template-columns: minmax(96px, .85fr) minmax(150px, 1.4fr); gap: 12px; }
+.chordbox { display: block; width: 100%; max-width: 160px; justify-self: center; }
+.chordbox .string, .chordbox .fret, .chordbox .nut { stroke: var(--ink); }
+.chordbox .string-off, .chordbox .fret { opacity: .35; }
+.chordbox .nut { stroke-width: 4; }
+.chordbox .dot { fill: var(--open); }
+.chordbox .fn { text-anchor: middle; fill: var(--on-dot); font-size: 12px; font-weight: 700; }
+.chordbox .nn, .chordbox .mk { text-anchor: middle; fill: var(--ink); font-size: 12px; }
+.chordbox .startfret, .chordbox .capolab { text-anchor: end; fill: var(--muted); font-size: 10px; }
+.chordbox .openring { fill: none; stroke: var(--open); stroke-width: 2; }
+.grip table { width: 100%; border-collapse: collapse; font-size: .875rem; text-align: left; }
+.grip th, .grip td { padding: 5px 3px; vertical-align: baseline; border-bottom: 1px solid var(--line); }
+.grip thead { color: var(--muted); font-size: .75rem; }
+.grip tr > :last-child { text-align: right; }
+.grip p, .picked p, .fills p { font-size: .95rem; }
+.drill { padding-left: 12px; border-left: 3px solid var(--open); }
+.drill a, .picked a, .fills a { display: inline-block; }
+.picked { display: grid; align-content: start; gap: 12px; background: var(--wash); }
+.picked h3 { font-size: 1.15rem; }
+.fills { list-style: none; display: grid; gap: 12px; padding: 0; margin: 0; }
+.fills li { display: grid; grid-template-columns: minmax(10em, 1fr) 3fr; gap: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+@media (max-width: 800px) {
+  .pair { grid-template-columns: 1fr; }
+  .map { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 580px) {
+  .fills li { grid-template-columns: 1fr; gap: 3px; }
+  .map > div { padding: 10px; }
+  .grip-body { gap: 8px; }
+}
+@media print {
+  .grip, .picked, .map, .fills li { break-inside: avoid; }
+}

@@ -1,6 +1,6 @@
 # Thugz Mansion
 
-[Open the practice sheet](index.html)
+[Open the practice sheet](index.html) · [Chord shapes and fingering](chords.html)
 
 Tupac Shakur’s acoustic arrangement, as taught by Daniel Chavez. The four-bar intro also serves as the interlude. Each verse/chorus option covers the same four-bar progression.
 
@@ -14,6 +14,8 @@ Tupac Shakur’s acoustic arrangement, as taught by Daniel Chavez. The four-bar 
 Frets, grips, articulations and stroke directions come from the [DC Guitar tab](https://dc-guitar.com/artists/tupac-shakur/thugz-mansion). Its chord names and fret numbers are relative to a first-fret capo in standard tuning. Playback transposes each string up one semitone. The source lists 88 bpm. Its plain-text tab gives no note durations, so the sheet uses a straight sixteenth-note practice grid.
 
 The intro loops on first load. Select a different passage, tap a bar to isolate it, or select all four patterns to play through the examples in lesson order. Play or Space starts a four-click count-in. Each passage heading also works as a link target, for example [muted strumming](index.html#section-13).
+
+The chord guide uses the full strummed voicings from the score. It includes suggested finger assignments, smaller grips for the picked parts, and links that select a single practice bar, such as [the first Am7–Bm7–Cmaj7 change](index.html#bar-7). The generator builds both pages.
 
 ## Rebuilding
 

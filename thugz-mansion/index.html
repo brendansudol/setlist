@@ -154,6 +154,7 @@ details[open] summary { margin-bottom: 10px; }
   <h1>Thugz Mansion</h1>
   <p class="lede">Tupac Shakur &middot; Guitar arrangement by Daniel Chavez</p>
   <p class="meta">Standard tuning &middot; Capo 1 &middot; 4/4 &middot; 88 bpm</p>
+  <p><a href="chords.html">Learn the chord shapes and fingerings →</a></p>
 </header>
 <div class="practice" role="region" aria-label="Interactive tablature">
   <p class="note hint">Start with the intro, then choose one of the three verse/chorus patterns. Tap a bar to loop it. Tap it again to play through all four patterns.</p>
@@ -543,6 +544,12 @@ details[open] summary { margin-bottom: 10px; }
   }
   function followPassageLink() {
     const anchor = location.hash.slice(1);
+    const barLink = /^bar-([1-9]\d*)$/.exec(anchor);
+    if (barLink) {
+      const i = Number(barLink[1]) - 1;
+      if (i < bars.length) setRange(i, i, true);
+      return;
+    }
     const option = Array.from(loop.options).find(o => o.dataset.anchor === anchor);
     if (option) {
       loop.value = option.value;

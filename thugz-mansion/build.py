@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from practice.notation import ASSETS, PLAY_ICON, STOP_ICON, QUARTER, WHOLE, bar_button, timeline
+from chords import guide
 from score import BPM, CAPO, LESSON, PASSAGES, SOURCE
 
 
@@ -90,6 +91,7 @@ def page():
   <h1>Thugz Mansion</h1>
   <p class="lede">Tupac Shakur &middot; Guitar arrangement by Daniel Chavez</p>
   <p class="meta">Standard tuning &middot; Capo {CAPO} &middot; 4/4 &middot; {BPM} bpm</p>
+  <p><a href="chords.html">Learn the chord shapes and fingerings →</a></p>
 </header>
 <div class="practice" role="region" aria-label="Interactive tablature">
   <p class="note hint">Start with the intro, then choose one of the three verse/chorus patterns. Tap a bar to loop it. Tap it again to play through all four patterns.</p>
@@ -124,3 +126,4 @@ def page():
 
 if __name__ == "__main__":
     Path(__file__).with_name("index.html").write_text(page(), encoding="utf-8")
+    Path(__file__).with_name("chords.html").write_text(guide(), encoding="utf-8")

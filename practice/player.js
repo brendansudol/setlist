@@ -345,6 +345,12 @@
   }
   function followPassageLink() {
     const anchor = location.hash.slice(1);
+    const barLink = /^bar-([1-9]\d*)$/.exec(anchor);
+    if (barLink) {
+      const i = Number(barLink[1]) - 1;
+      if (i < bars.length) setRange(i, i, true);
+      return;
+    }
     const option = Array.from(loop.options).find(o => o.dataset.anchor === anchor);
     if (option) {
       loop.value = option.value;

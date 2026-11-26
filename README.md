@@ -14,7 +14,7 @@ each shape appears in the video.
 | Your Song (Elton John), intro and verse | [your-song/](https://brendansudol.github.io/setlist/your-song/) | [your-song/README.md](your-song/README.md) |
 | All The Small Things (Blink-182), intro to chorus | [all-the-small-things/](https://brendansudol.github.io/setlist/all-the-small-things/) | [all-the-small-things/README.md](all-the-small-things/README.md) |
 | Gild the Lily (Billy Strings), verse, chorus and bridge | [gild-the-lily/](https://brendansudol.github.io/setlist/gild-the-lily/) | [gild-the-lily/README.md](gild-the-lily/README.md) |
-| Thugz Mansion (Tupac Shakur), intro and three verse/chorus patterns | [Interactive tab](thugz-mansion/index.html) | [thugz-mansion/README.md](thugz-mansion/README.md) |
+| Thugz Mansion (Tupac Shakur), intro and three verse/chorus patterns | [Interactive tab](thugz-mansion/index.html) · [Chord shapes and fingering](thugz-mansion/chords.html) | [thugz-mansion/README.md](thugz-mansion/README.md) |
 | Banana Pancakes (Jack Johnson), the whole song | [banana-pancakes/](https://brendansudol.github.io/setlist/banana-pancakes/) | [banana-pancakes/README.md](banana-pancakes/README.md) |
 | Danny's Song (Loggins & Messina), the whole song | [dannys-song/](https://brendansudol.github.io/setlist/dannys-song/) | [dannys-song/README.md](dannys-song/README.md) |
 
