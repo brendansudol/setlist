@@ -14,6 +14,7 @@ each shape appears in the video.
 | Your Song (Elton John), intro and verse | [your-song/](https://brendansudol.github.io/setlist/your-song/) | [your-song/README.md](your-song/README.md) |
 | All The Small Things (Blink-182), intro to chorus | [all-the-small-things/](https://brendansudol.github.io/setlist/all-the-small-things/) | [all-the-small-things/README.md](all-the-small-things/README.md) |
 | Gild the Lily (Billy Strings), verse, chorus and bridge | [gild-the-lily/](https://brendansudol.github.io/setlist/gild-the-lily/) | [gild-the-lily/README.md](gild-the-lily/README.md) |
+| Thugz Mansion (Tupac Shakur), intro and three verse/chorus patterns | [Interactive tab](thugz-mansion/index.html) | [thugz-mansion/README.md](thugz-mansion/README.md) |
 | Banana Pancakes (Jack Johnson), the whole song | [banana-pancakes/](https://brendansudol.github.io/setlist/banana-pancakes/) | [banana-pancakes/README.md](banana-pancakes/README.md) |
 | Danny's Song (Loggins & Messina), the whole song | [dannys-song/](https://brendansudol.github.io/setlist/dannys-song/) | [dannys-song/README.md](dannys-song/README.md) |
 
@@ -40,8 +41,9 @@ gild-the-lily/
     index.html          the tab and its player, generated
     build.py            validates the score and generates the standalone sheet
     score.py            the transcribed measures and practice passages
-    player.js           playback and loop controls, inlined during the build
     README.md           source, prompt, process and data for that sheet
+thugz-mansion/          Daniel Chavez’s four tab examples and their generator
+practice/               notation renderer, styles and audio shared by the tab sheets
 banana-pancakes/
   index.html            the explainer page, generated
   build.py              the data and the generator for that page
@@ -94,7 +96,6 @@ GitHub Pages serves the `main` branch from the repository root. Pushing to
 
 The lessons belong to their instructors; each page links back to its source
 video. The pages contain no video frames or lyrics, and the video is played
-by YouTube's own embedded player. Diagrams are original drawings. One sheet
-writes notes out as TAB:
-[the Gild the Lily practice sheet](gild-the-lily/pre-intro/README.md) covers
-all 69 bars of B-RoM’s guitar arrangement.
+by YouTube's own embedded player. Diagrams are original drawings.
+The playable tab sheets cover [B-RoM’s Gild the Lily arrangement](gild-the-lily/pre-intro/README.md)
+and [Daniel Chavez’s Thugz Mansion patterns](thugz-mansion/README.md).

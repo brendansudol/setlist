@@ -17,7 +17,7 @@
 
   const buffers = new Map();
   const ringing = new Map();
-  let ctx, master, run, timer, frame;
+  let ctx, master, run, timer, frame, muteBuffer;
   let first = 0, last = bars.length - 1;
   let queue = [], activeBar = -1, activeStep = null;
 
@@ -100,7 +100,7 @@
     source.buffer = stringBuffer(midi);
     filter.type = 'lowpass';
     filter.frequency.value = 1800 + velocity * 5200;
-    gain.gain.value = velocity * 0.8;
+    gain.gain.value = velocity * 0.8 / (event.strum ? Math.sqrt(event.notes.length) : 1);
     if (soft) {
       gain.gain.setValueAtTime(0, time);
       gain.gain.linearRampToValueAtTime(velocity * 0.8, time + 0.006);
@@ -147,6 +147,27 @@
     osc.stop(time + 0.08);
   }
 
+  function mutedStroke(time) {
+    if (!muteBuffer) {
+      const rate = ctx.sampleRate;
+      muteBuffer = ctx.createBuffer(1, Math.ceil(rate * 0.065), rate);
+      const samples = muteBuffer.getChannelData(0);
+      let seed = 813, noise = 0;
+      for (let i = 0; i < samples.length; i++) {
+        seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+        noise += 0.48 * (2 * seed / 4294967296 - 1 - noise);
+        const t = i / rate;
+        samples[i] = (0.65 * noise + 0.2 * Math.sin(2 * Math.PI * 160 * t))
+          * Math.min(1, t / 0.001) * Math.exp(-100 * t);
+      }
+    }
+    const source = ctx.createBufferSource();
+    source.buffer = muteBuffer;
+    source.connect(master);
+    source.onended = () => source.disconnect();
+    source.start(time);
+  }
+
   // Wake at every beat and every written onset. Rests advance the same clock
   // as notes, including the full-bar rests and the two half rests in bar 59.
   function pump() {
@@ -164,11 +185,12 @@
       const beatOffset = run.at % score.beat;
       const ticks = Math.min(event.at + event.dur - run.at, score.beat - beatOffset);
       if (run.at === event.at) {
-        // Let the original pre-intro arpeggios ring across strings.
-        const letRing = run.bar < score.preIntroBars && event.notes.length && !(run.bar === first && run.step === 0);
+        const letRing = run.bar < score.ringBars && event.notes.length && !event.cut && !(run.bar === first && run.step === 0);
         damp(time, letRing ? event.notes.map(([string]) => string) : undefined);
-        for (const [string, midi] of event.notes) {
-          pluck(string, midi, event, time, event.dur * beatSeconds / score.beat);
+        if (event.tech === 'mute') mutedStroke(time);
+        const spread = event.strum ? 0.004 : 0;
+        for (const [i, [string, midi]] of event.notes.entries()) {
+          pluck(string, midi, event, time + i * spread, event.dur * beatSeconds / score.beat);
         }
       }
       if (clickBox.checked && beatOffset === 0) tick(time, run.at === 0);
@@ -317,6 +339,10 @@
     setRange(a - 1, b - 1, true);
   }
   loop.addEventListener('change', applyLoopOption);
+  if (loop.selectedIndex > 0) {
+    const [a, b] = loop.value.split('-').map(Number);
+    setRange(a - 1, b - 1, false);
+  }
   function followPassageLink() {
     const anchor = location.hash.slice(1);
     const option = Array.from(loop.options).find(o => o.dataset.anchor === anchor);

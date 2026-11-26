@@ -32,7 +32,7 @@ python3 -B gild-the-lily/pre-intro/build.py
 articulations. Durations use 24 ticks per quarter note, which represents
 both the triplet in bar 38 and the thirty-second in bar 39 exactly.
 [build.py](build.py) checks the measure lengths, pitches and legato
-connections, draws the tab, and embeds [player.js](player.js) and the
+connections, draws the tab, and embeds the [shared player](../../practice/player.js) and the
 same score timing in [index.html](index.html). The build uses the Python
 standard library. Synthesized slides, bends and vibrato approximate the
 printed articulations.

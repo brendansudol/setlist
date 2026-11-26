@@ -3,30 +3,7 @@
 Durations use 24 ticks per quarter. Each fret is (string, fret, written pitch).
 Guitar notation sounds an octave below the staff. A step without frets is a rest.
 """
-from dataclasses import dataclass
-
-WHOLE, HALF, QUARTER, EIGHTH = 96, 48, 24, 12
-TRIPLET = 8  # three eighth-note triplets in one quarter
-
-
-@dataclass(frozen=True)
-class Step:
-    ticks: int
-    notes: tuple = ()
-    tech: str = ""
-    pick: str = ""
-
-
-def hit(ticks, *notes, tech="", pick=""):
-    return Step(ticks, notes, tech, pick)
-
-
-@dataclass(frozen=True)
-class Bar:
-    chord: str
-    steps: tuple
-    # Additional chord changes, measured in ticks from the start of this bar.
-    changes: tuple = ()
+from practice.notation import Bar, Step, EIGHTH, HALF, QUARTER, TRIPLET, WHOLE, hit
 
 
 PRE_INTRO = (
