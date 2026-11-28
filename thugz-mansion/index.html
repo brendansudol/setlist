@@ -207,6 +207,7 @@ details[open] summary { margin-bottom: 10px; }
   const go = document.getElementById('go');
   const goText = document.getElementById('go-text');
   const tempo = document.getElementById('tempo');
+  const tuning = document.getElementById('tuning');
   const tempoOut = document.getElementById('tempo-out');
   const clickBox = document.getElementById('click');
   const loop = document.getElementById('loop');
@@ -297,7 +298,7 @@ details[open] summary { margin-bottom: 10px; }
     const filter = ctx.createBiquadFilter();
     const soft = ['hammer', 'pull', 'slide'].includes(event.tech);
     const velocity = soft ? 0.55 : 0.85;
-    source.buffer = stringBuffer(midi);
+    source.buffer = stringBuffer(midi + run.transpose);
     filter.type = 'lowpass';
     filter.frequency.value = 1800 + velocity * 5200;
     gain.gain.value = velocity * 0.8 / (event.strum ? Math.sqrt(event.notes.length) : 1);
@@ -466,7 +467,8 @@ details[open] summary { margin-bottom: 10px; }
     if (!Audio || run) return;
     const order = first === 0 && last === bars.length - 1 && score.order
       ? score.order : Array.from({ length: last - first + 1 }, (_, i) => first + i);
-    const session = { order, index: 0, bar: order[0], entry: true, step: 0, at: 0, time: 0, count: 0 };
+    const transpose = Number(tuning?.value || 0);
+    const session = { order, index: 0, bar: order[0], entry: true, step: 0, at: 0, time: 0, count: 0, transpose };
     run = session;
     go.setAttribute('aria-pressed', 'true');
     goText.textContent = 'Stop';
@@ -481,7 +483,7 @@ details[open] summary { margin-bottom: 10px; }
       master.connect(ctx.destination);
       // Build one uncached pitch per scheduler tick, starting during the count-in.
       const pitches = score.bars.slice(first, last + 1).flatMap(steps =>
-        steps.flatMap(event => event.notes.concat(event.ties || []).map(([, midi]) => midi)));
+        steps.flatMap(event => event.notes.concat(event.ties || []).map(([, midi]) => midi + transpose)));
       const toWarm = [...new Set(pitches)].filter(midi => !buffers.has(midi));
       run.time = ctx.currentTime + 0.07;
       pump();
@@ -545,6 +547,9 @@ details[open] summary { margin-bottom: 10px; }
   function toggle() { if (run) stop(); else start(); }
 
   go.addEventListener('click', toggle);
+  tuning?.addEventListener('change', () => {
+    if (run) { stop(); start(); }
+  });
   tempo.addEventListener('input', () => { tempoOut.textContent = tempo.value + ' bpm'; });
   function applyLoopOption() {
     const [a, b] = loop.value.split('-').map(Number);

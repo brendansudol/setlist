@@ -98,7 +98,26 @@ The thumb frets the low E string on every chord except A.
 [8:28](https://youtu.be/dgEQvqHTQbw?t=508), melody
 [8:45](https://youtu.be/dgEQvqHTQbw?t=525).
 
-## Rules the page follows
+## Interactive practice sheet
+
+The [practice sheet](practice/index.html) follows the three videos on the
+[instructor’s lesson page](https://sixstringfingerpicking.com/songs/the-heart-of-life-guitar-lesson/).
+Bars 1–8 are the intro and verse groove. Bars 9–16 add the second-guitar
+melody. Bars 17–33 follow the chorus play-through, including the G fill and
+the held D. Bars 34–50 take the outro shapes up and back down over open A
+and G, ending on the sustained A7 suggested for a solo player.
+
+The numbering follows those practice sections in lesson order. Each backbeat
+pairs a percussive tap with a pitched flick. The chorus uses the C♯–D–E
+figure played over A in the opening demonstration. Playback starts in
+standard tuning and can be lowered one semitone to play with the record.
+The metronome marks the half note at 88 in cut time, as marked in the
+[instructor’s published edition](https://www.musicnotes.com/sheetmusic/six-string-fingerpicking/the-heart-of-life-accompaniment-only/MN0218635).
+
+Edit the measures in [score.py](practice/score.py), then run
+`python3 -B heart-of-life/practice/build.py` from the repository root.
+
+## Rules the chord guide follows
 
 - **No video frames.** The diagrams are original drawings. Every shape
   deep-links to its moment in the video (`youtu.be/ID?t=SECONDS`) so the real

@@ -10,7 +10,7 @@ each shape appears in the video.
 
 | Song | Page | How it was made |
 |---|---|---|
-| The Heart of Life (John Mayer), intro and verse | [heart-of-life/](https://brendansudol.github.io/setlist/heart-of-life/) | [heart-of-life/README.md](heart-of-life/README.md) |
+| The Heart of Life (John Mayer), intro, verse, chorus and outro | [Chord guide](heart-of-life/index.html) · [Interactive tab](heart-of-life/practice/index.html) | [heart-of-life/README.md](heart-of-life/README.md) |
 | Your Song (Elton John), intro and verse | [your-song/](https://brendansudol.github.io/setlist/your-song/) | [your-song/README.md](your-song/README.md) |
 | All The Small Things (Blink-182), intro to chorus | [all-the-small-things/](https://brendansudol.github.io/setlist/all-the-small-things/) | [all-the-small-things/README.md](all-the-small-things/README.md) |
 | Gild the Lily (Billy Strings), verse, chorus and bridge | [gild-the-lily/](https://brendansudol.github.io/setlist/gild-the-lily/) | [gild-the-lily/README.md](gild-the-lily/README.md) |
@@ -25,6 +25,7 @@ index.html              the song list (site home page)
 heart-of-life/
   index.html            the explainer page, one self-contained file
   README.md             source, prompt, process and data for that page
+  practice/             the lesson loops, their generator and the standalone tab player
 your-song/
   index.html            the explainer page, generated
   build.py              the data and the generator for that page
@@ -97,6 +98,7 @@ GitHub Pages serves the `main` branch from the repository root. Pushing to
 The lessons belong to their instructors; each page links back to its source
 video. The pages contain no video frames or lyrics, and the video is played
 by YouTube's own embedded player. Diagrams are original drawings.
-The playable tab sheets cover [B-RoM’s Gild the Lily arrangement](gild-the-lily/pre-intro/README.md),
+The playable tab sheets cover [Six String Fingerpicking’s Heart of Life lessons](heart-of-life/README.md#interactive-practice-sheet),
+[B-RoM’s Gild the Lily arrangement](gild-the-lily/pre-intro/README.md),
 [Daniel Chavez’s Thugz Mansion patterns](thugz-mansion/README.md) and
 [the Jerry’s Guitar Bar arrangement of Danny’s Song](dannys-song/practice/index.html).
