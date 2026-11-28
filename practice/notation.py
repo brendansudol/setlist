@@ -13,6 +13,7 @@ class Step:
     notes: tuple = ()
     tech: str = ""
     pick: str = ""
+    ties: tuple = ()  # Frets still sounding from the preceding bar.
 
 
 def hit(ticks, *notes, tech="", pick=""):
@@ -84,6 +85,8 @@ def timeline(bar, previous, *, capo=0, width=W, strummed=False):
                      notes=[[s, sounding(s, f) + capo] for s, f, *_ in st.notes if f != "x"])
         if st.tech:
             event["tech"] = st.tech
+        if st.ties:
+            event["ties"] = [[s, sounding(s, f) + capo] for s, f in st.ties]
         if st.tech == "slide":
             string, fret, *_ = st.notes[0]
             event["slideOffset"] = next(f - fret for s, f, *_ in previous.notes if s == string)
@@ -127,7 +130,11 @@ def bar_svg(i, bar, events, sixteenths):
             y = y_of(string)
             o.append(f'<rect class="pill" x="{num(x-8)}" y="{num(y-6.5)}" width="{num(end-x-2)}" height="13" rx="6.5"/>'
                      f'<text class="fr" x="{num(x)}" y="{num(y+4.3)}">{fret}</text>')
-        if not st.notes:
+        for string, fret in st.ties:
+            y = y_of(string)
+            o.append(f'<rect class="pill" x="{num(x-10)}" y="{num(y-6.5)}" width="{num(end-x)}" height="13" rx="6.5"/>'
+                     f'<text class="fr" x="{num(x)}" y="{num(y+4.3)}">({fret})</text>')
+        if not st.notes and not st.ties:
             label = "4-beat rest" if st.ticks == WHOLE else "rest"
             o.append(f'<rect class="rest-tail" x="{num(x-8)}" y="83" width="{num(end-x-3)}" height="13" rx="6"/>'
                      f'<text class="rest-label" x="{num((x+end)/2-9)}" y="92.5">{label}</text>')
@@ -194,7 +201,10 @@ def bar_button(i, bar, events, *, sixteenths=False):
         markings = [TECHNIQUES[st.tech]] if st.tech else []
         if st.pick:
             markings.append(st.pick + "stroke")
-        parts.append(", ".join([count_spoken(e["at"]).capitalize(), notes or "rest", *markings]) + ".")
+        if st.ties:
+            markings.append("hold " + " and ".join(f"{STRINGS[s][1]} string {describe_fret(f)}" for s, f in st.ties))
+        actions = ([notes] if notes else []) + markings
+        parts.append(", ".join([count_spoken(e["at"]).capitalize(), *(actions or ["rest"])]) + ".")
     return (f'<button type="button" class="bar" data-bar="{i}" aria-pressed="false" '
             f'aria-label="Loop bar {i+1}" aria-describedby="bar-words-{i}">{bar_svg(i, bar, events, sixteenths)}'
             f'<span class="sr" id="bar-words-{i}">{escape(" ".join(parts))}</span></button>')

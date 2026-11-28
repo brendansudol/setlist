@@ -16,7 +16,7 @@ each shape appears in the video.
 | Gild the Lily (Billy Strings), verse, chorus and bridge | [gild-the-lily/](https://brendansudol.github.io/setlist/gild-the-lily/) | [gild-the-lily/README.md](gild-the-lily/README.md) |
 | Thugz Mansion (Tupac Shakur), intro and three verse/chorus patterns | [Interactive tab](thugz-mansion/index.html) · [Chord shapes and fingering](thugz-mansion/chords.html) | [thugz-mansion/README.md](thugz-mansion/README.md) |
 | Banana Pancakes (Jack Johnson), the whole song | [banana-pancakes/](https://brendansudol.github.io/setlist/banana-pancakes/) | [banana-pancakes/README.md](banana-pancakes/README.md) |
-| Danny's Song (Loggins & Messina), the whole song | [dannys-song/](https://brendansudol.github.io/setlist/dannys-song/) | [dannys-song/README.md](dannys-song/README.md) |
+| Danny's Song (Loggins & Messina), the whole song | [Chord guide](dannys-song/index.html) · [Interactive tab](dannys-song/practice/index.html) | [dannys-song/README.md](dannys-song/README.md) |
 
 ## Layout
 
@@ -75,8 +75,8 @@ text in all four `build.py` files and in `heart-of-life/index.html`, so a
 change to it has to be made in all five. A lesson can be split across
 videos, as Gild the Lily's is: the player loads whichever one a timestamp
 belongs to. `dannys-song` is the exception. Its lesson is a paid download of
-video files, which are not on this site, so that page has no player and
-writes each time out as text.
+video files. Its chord guide lists the video timestamps, and its separate
+practice sheet synthesizes the guitar part.
 
 ## Adding a song
 
@@ -97,5 +97,6 @@ GitHub Pages serves the `main` branch from the repository root. Pushing to
 The lessons belong to their instructors; each page links back to its source
 video. The pages contain no video frames or lyrics, and the video is played
 by YouTube's own embedded player. Diagrams are original drawings.
-The playable tab sheets cover [B-RoM’s Gild the Lily arrangement](gild-the-lily/pre-intro/README.md)
-and [Daniel Chavez’s Thugz Mansion patterns](thugz-mansion/README.md).
+The playable tab sheets cover [B-RoM’s Gild the Lily arrangement](gild-the-lily/pre-intro/README.md),
+[Daniel Chavez’s Thugz Mansion patterns](thugz-mansion/README.md) and
+[the Jerry’s Guitar Bar arrangement of Danny’s Song](dannys-song/practice/index.html).

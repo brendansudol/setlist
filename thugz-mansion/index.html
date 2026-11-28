@@ -230,8 +230,9 @@ details[open] summary { margin-bottom: 10px; }
   function stringBuffer(midi) {
     if (buffers.has(midi)) return buffers.get(midi);
     const sr = ctx.sampleRate, f0 = 440 * 2 ** ((midi - 69) / 12);
-    // A whole note at the slowest practice tempo lasts six seconds.
-    const sound = ctx.createBuffer(1, Math.ceil(sr * 6.2), sr);
+    // Include any sustain across barlines, even at the slowest slider setting.
+    const seconds = (score.sustainBeats ?? 4) * 60 / Number(tempo.min) + 0.2;
+    const sound = ctx.createBuffer(1, Math.ceil(sr * seconds), sr);
     const samples = sound.getChannelData(0);
     const pickPosition = 0.19 + 0.035 * Math.sin(midi * 1.9);
     const baseDecay = fundamentalDecay(midi);
@@ -384,10 +385,16 @@ details[open] summary { margin-bottom: 10px; }
       const beatOffset = run.at % score.beat;
       const ticks = Math.min(event.at + event.dur - run.at, score.beat - beatOffset);
       if (run.at === event.at) {
-        const letRing = run.bar < score.ringBars && event.notes.length && !event.cut && !(run.bar === first && run.step === 0);
-        damp(time, letRing ? event.notes.map(([string]) => string) : undefined);
+        const entering = run.step === 0 && run.entry;
+        const letRing = run.bar < score.ringBars && event.notes.length && !event.cut;
+        const release = event.release ?? (letRing ? event.notes.map(([string]) => string) : undefined);
+        damp(time, entering ? undefined : release);
         if (event.tech === 'mute') mutedStroke(time);
         const spread = event.strum ? 0.004 : 0;
+        // Supply a tied note when a practice loop starts in the middle of its sustain.
+        if (entering && run.index === 0 && event.ties) {
+          for (const [string, midi] of event.ties) pluck(string, midi, event, time, beatSeconds);
+        }
         for (const [i, [string, midi]] of event.notes.entries()) {
           pluck(string, midi, event, time + i * spread, event.dur * beatSeconds / score.beat);
         }
@@ -401,7 +408,10 @@ details[open] summary { margin-bottom: 10px; }
       if (run.at === event.at + event.dur) run.step++;
       if (run.step === steps.length) {
         run.step = run.at = 0;
-        run.bar = run.bar === last ? first : run.bar + 1;
+        const previous = run.bar;
+        run.index = (run.index + 1) % run.order.length;
+        run.bar = run.order[run.index];
+        run.entry = run.index === 0 || run.bar !== previous + 1;
       }
     }
   }
@@ -454,7 +464,9 @@ details[open] summary { margin-bottom: 10px; }
 
   async function start() {
     if (!Audio || run) return;
-    const session = { bar: first, step: 0, at: 0, time: 0, count: 0 };
+    const order = first === 0 && last === bars.length - 1 && score.order
+      ? score.order : Array.from({ length: last - first + 1 }, (_, i) => first + i);
+    const session = { order, index: 0, bar: order[0], entry: true, step: 0, at: 0, time: 0, count: 0 };
     run = session;
     go.setAttribute('aria-pressed', 'true');
     goText.textContent = 'Stop';
@@ -469,7 +481,7 @@ details[open] summary { margin-bottom: 10px; }
       master.connect(ctx.destination);
       // Build one uncached pitch per scheduler tick, starting during the count-in.
       const pitches = score.bars.slice(first, last + 1).flatMap(steps =>
-        steps.flatMap(event => event.notes.map(([, midi]) => midi)));
+        steps.flatMap(event => event.notes.concat(event.ties || []).map(([, midi]) => midi)));
       const toWarm = [...new Set(pitches)].filter(midi => !buffers.has(midi));
       run.time = ctx.currentTime + 0.07;
       pump();
@@ -514,13 +526,14 @@ details[open] summary { margin-bottom: 10px; }
     first = a;
     last = b;
     const single = a === b;
+    const value = (a + 1) + '-' + (b + 1);
     document.getElementById('single-bar')?.remove();
-    if (single) {
-      const option = new Option('Bar ' + (a + 1), (a + 1) + '-' + (b + 1));
+    if (single && !Array.from(loop.options).some(option => option.value === value)) {
+      const option = new Option('Bar ' + (a + 1), value);
       option.id = 'single-bar';
       loop.add(option);
     }
-    loop.value = (a + 1) + '-' + (b + 1);
+    loop.value = value;
     bars.forEach((bar, i) => {
       bar.classList.toggle('out', i < a || i > b);
       bar.setAttribute('aria-pressed', String(single && i === a));

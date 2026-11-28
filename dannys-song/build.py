@@ -668,6 +668,7 @@ def page():
 <header class="top">
   <p class="eyebrow">Guitar lesson notes</p>
   <h1>Danny's Song: a Travis pick, a strum, {NUMBER_WORDS[n]} shapes</h1>
+  <p><a href="practice/index.html">Play and loop the 38-bar guitar tab →</a></p>
   <p class="lede">The guitar part to the Loggins &amp; Messina song as Jerry's Guitar Bar teaches it: Travis picking for the first two verses and choruses, an optional strummed version for the last two, and the chords under both. The lesson is a paid download, so this page cannot play it. Every time is written out for you to find in your own copy.</p>
   <dl class="facts">
     <div><dt>Key</dt><dd>D, in standard tuning. The lesson names the key but not the tuning; the chord shapes are the ordinary open ones.</dd></div>

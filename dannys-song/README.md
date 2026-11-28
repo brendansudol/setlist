@@ -167,7 +167,7 @@ sixteen slots, and that every time falls inside the video it names.
 After the build, a separate pass confirmed that every in-page link has a
 target.
 
-## Rules the page follows
+## Scope of the original chord guide
 
 - **None of the lesson's files are published.** Not the videos, not frames
   from them, not the tab and not the chord sheet. The lesson is something its
@@ -194,10 +194,17 @@ Built around what this lesson teaches, which is the picking hand.
 - **Three families:** open chords, the one barre chord, and D over a moving
   bass note.
 
+## Interactive practice sheet
+
+[Play the 38-bar tab](practice/index.html). The sheet keeps the PDF’s numbering for its six sections. The whole-song loop follows the lesson form, including the instrumental verse before the outro. The guitar plays the two written voices independently. Parentheses mark notes carried across barlines, including the final D.
+
+[practice/score.py](practice/score.py) records the tab on a sixteenth-note grid. Stacked pitches sound together, with a slight spread for brushes and strums. The stroke directions are practice suggestions. The player defaults to the printed 71 bpm.
+
 ## Rebuilding
 
 ```bash
-python3 dannys-song/build.py
+python3 -B dannys-song/build.py
+python3 -B dannys-song/practice/build.py
 ```
 
 Standard library only. Edit the data at the top of `build.py`, not
@@ -205,5 +212,5 @@ Standard library only. Edit the data at the top of `build.py`, not
 
 ## What is not in this repository
 
-- The lesson's three videos, its tab and its chord sheet.
+- The original video files and lesson PDFs.
 - The transcripts and the frames made from the videos.
